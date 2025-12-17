@@ -1,0 +1,74 @@
+.table-container {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #242424;
+}
+
+.package-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.package-table th {
+    background-color: #1e1e1e;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 10px 15px;
+    position: sticky;
+    top: 0;
+}
+
+.package-table td {
+    border-bottom: 1px solid #333;
+    padding: 10px 15px;
+    color: #ccc;
+}
+
+.package-table tr:hover {
+    background-color: #2a2a2a;
+    cursor: pointer;
+}
+
+.package-table tr.selected {
+    background-color: #354a5f;
+    color: white;
+}
+
+.col-name {
+    font-weight: 500;
+}
+
+.col-ver {
+    font-family: monospace;
+    color: #aaa;
+}
+.selected .col-ver {
+    color: #ddd;
+}
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-major {
+    background-color: #c01c28; /* Adwaita Red */
+    color: white;
+}
+
+.badge-minor {
+    background-color: #1a5fb4; /* Adwaita Blue */
+    color: white;
+}
+
+.badge-ok {
+    background-color: #26a269; /* Adwaita Green */
+    color: white;
+}
