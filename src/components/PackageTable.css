@@ -24,8 +24,9 @@
 
 .package-table td {
     border-bottom: 1px solid #333;
-    padding: 10px 15px;
+    padding: 12px 15px; /* More roomy */
     color: #ccc;
+    vertical-align: middle;
 }
 
 .package-table tr:hover {
@@ -51,24 +52,25 @@
 }
 
 .badge {
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 12px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .badge-major {
-    background-color: #c01c28; /* Adwaita Red */
+    background-color: #f66151; /* Adwaita Red */
     color: white;
 }
 
 .badge-minor {
-    background-color: #1a5fb4; /* Adwaita Blue */
+    background-color: #62a0ea; /* Adwaita Blue Lighter */
     color: white;
 }
 
 .badge-ok {
-    background-color: #26a269; /* Adwaita Green */
-    color: white;
+    background-color: #8ff0a4; /* Adwaita Green Lighter */
+    color: #1e1e1e; /* Dark text for contrast */
 }

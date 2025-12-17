@@ -90,13 +90,14 @@ Deps is designed around **native Linux integration**, not browser compatibility.
   - adaptive light/dark mode
   - minimal visual noise
 
-### Backend Logic
+### Application Core (Native System Layer)
 - Local execution of system commands (`npm`)
-- No embedded package managers
+- Project scanning and package parsing
+- No background services or servers
 - Clear separation between:
-  - UI
-  - project scanning
-  - command execution
+  - UI (presentation)
+  - application core (logic)
+  - system interaction (filesystem, processes)
 
 ### Language Choices
 - **TypeScript** for UI and data modeling

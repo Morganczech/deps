@@ -2,10 +2,10 @@
     width: 300px;
     background-color: #1e1e1e;
     border-left: 1px solid #333;
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
 }
 
 .details-panel.empty {
@@ -54,10 +54,10 @@
     background-color: var(--color-primary);
     color: white;
     border: none;
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .btn-warning {
