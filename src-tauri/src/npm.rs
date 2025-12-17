@@ -57,11 +57,11 @@ pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
         .map_err(|e| format!("Failed to execute npm: {}", e))?;
 
     let outdated_map: HashMap<String, OutdatedInfo> = if output.status.success() || output.status.code() == Some(1) {
-        serde_json::from_slice(&out.stdout).unwrap_or_default()
+        serde_json::from_slice(&output.stdout).unwrap_or_default()
     } else {
         // If exit code is not 0 or 1, it might be a real error (e.g. missing node_modules)
         // We can capture stderr
-        let stderr = String::from_utf8_lossy(&out.stderr);
+        let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.contains("Cannot find module") || !Path::new(&project_path).join("node_modules").exists() {
              return Err("Missing node_modules? Try running npm install.".to_string());
         }

@@ -7,7 +7,6 @@ mod npm;
 
 use project::scan_projects;
 use npm::{get_packages, update_package};
-use project::scan_projects;
 
 fn main() {
   tauri::Builder::default()
