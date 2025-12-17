@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Package } from '../types';
+import { api } from '../lib/api';
 import { texts } from '../i18n/texts';
 import './PackageDetails.css';
 
@@ -97,38 +98,39 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                 </button>
             </div>
 
-            <div className="links">
-                <a
-                    href={`https://www.npmjs.com/package/${pkg.name}`}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    {texts.details.links.npm}
-                </a>
-                {pkg.repository && (
-                    <>
-                        {" | "}
-                        <a
-                            href={pkg.repository}
-                            target="_blank"
-                            rel="noreferrer"
+            <div className="links-section">
+                <h4>Links</h4>
+                <div className="links-list">
+                    <button
+                        className="link-badge npm"
+                        onClick={() => api.openUrl(`https://www.npmjs.com/package/${pkg.name}`)}
+                        title="Open NPM Registry"
+                    >
+                        NPM
+                    </button>
+
+                    {pkg.repository ? (
+                        <button
+                            className="link-badge repo"
+                            onClick={() => api.openUrl(pkg.repository!)}
+                            title={pkg.repository}
                         >
                             {texts.details.links.github}
-                        </a>
-                    </>
-                )}
-                {pkg.homepage && pkg.homepage !== pkg.repository && (
-                    <>
-                        {" | "}
-                        <a
-                            href={pkg.homepage}
-                            target="_blank"
-                            rel="noreferrer"
+                        </button>
+                    ) : (
+                        <span className="no-info">No repository info</span>
+                    )}
+
+                    {pkg.homepage && pkg.homepage !== pkg.repository && (
+                        <button
+                            className="link-badge home"
+                            onClick={() => api.openUrl(pkg.homepage!)}
+                            title={pkg.homepage}
                         >
                             {texts.details.links.homepage}
-                        </a>
-                    </>
-                )}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

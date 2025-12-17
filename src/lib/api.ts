@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { open } from "@tauri-apps/api/dialog";
+import { open as openShell } from "@tauri-apps/api/shell";
 import { Project, Package } from "../types";
 
 const isTauri = () => {
@@ -101,6 +102,18 @@ export const api = {
             await new Promise(r => setTimeout(r, 2000)); // Simulate mock install time
             // In a real mock scenario, we might want to update MOCK_PACKAGES here
             return;
+        }
+    },
+
+    openUrl: async (url: string): Promise<void> => {
+        if (isTauri()) {
+            try {
+                await openShell(url);
+            } catch (e) {
+                console.error("Failed to open URL via Tauri shell", e);
+            }
+        } else {
+            window.open(url, '_blank');
         }
     }
 };

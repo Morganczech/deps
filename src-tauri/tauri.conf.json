@@ -16,6 +16,9 @@
       "dialog": {
         "open": true,
         "save": false
+      },
+      "shell": {
+        "open": true
       }
     },
     "bundle": {

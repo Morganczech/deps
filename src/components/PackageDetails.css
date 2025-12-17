@@ -70,16 +70,61 @@
     font-weight: 500;
 }
 
-.links {
+.links-section {
     margin-top: auto;
-    font-size: 0.9rem;
+    padding-top: 20px;
+    border-top: 1px solid #333;
 }
 
-.links a {
-    color: #58a6ff;
-    text-decoration: none;
-    margin-right: 5px;
+.links-section h4 {
+    margin: 0 0 10px 0;
+    color: #888;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.links a:hover {
-    text-decoration: underline;
+
+.links-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.link-badge {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    transition: filter 0.2s;
+    display: inline-block;
+}
+
+.link-badge:hover {
+    filter: brightness(1.2);
+}
+
+.link-badge.npm {
+    background-color: #cb3837;
+    color: white;
+}
+
+.link-badge.repo {
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+}
+
+.link-badge.home {
+    background-color: #3584e4;
+    color: white;
+}
+
+.no-info {
+    font-style: italic;
+    color: #666;
+    font-size: 0.85rem;
 }
