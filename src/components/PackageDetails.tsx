@@ -4,9 +4,10 @@ import './PackageDetails.css';
 
 interface PackageDetailsProps {
     pkg: Package | null;
+    onUpdate: (pkg: Package, version: string) => void;
 }
 
-export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg }) => {
+export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, onUpdate }) => {
     if (!pkg) {
         return (
             <div className="details-panel empty">
@@ -30,13 +31,19 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg }) => {
 
             <div className="details-actions">
                 {pkg.update_status !== 'UpToDate' && (
-                    <button className="btn-primary">
+                    <button
+                        className="btn-primary"
+                        onClick={() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || "")}
+                    >
                         {texts.details.updateTo} {pkg.wanted_version || pkg.latest_version}
                     </button>
                 )}
 
                 {pkg.update_status === 'Major' && (
-                    <button className="btn-warning">
+                    <button
+                        className="btn-warning"
+                        onClick={() => onUpdate(pkg, pkg.latest_version || "")}
+                    >
                         {texts.details.forceUpdate} {pkg.latest_version} (Major)
                     </button>
                 )}

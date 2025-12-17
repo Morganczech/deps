@@ -4,6 +4,7 @@ import { Project, Package } from "./types";
 import { Terminal } from "./components/Terminal";
 import { PackageTable } from "./components/PackageTable";
 import { PackageDetails } from "./components/PackageDetails";
+import { ConfirmationModal } from "./components/ConfirmationModal";
 import { api } from "./lib/api";
 import { texts } from "./i18n/texts";
 import "./App.css";
@@ -16,9 +17,14 @@ function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Update Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [packageToUpdate, setPackageToUpdate] = useState<Package | null>(null);
+    const [targetVersion, setTargetVersion] = useState("");
+
     const [showTerminal, setShowTerminal] = useState(true);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [terminalOutput, _setTerminalOutput] = useState<string[]>(["> Ready."]);
+    const [terminalOutput, setTerminalOutput] = useState<string[]>(["> Ready."]);
 
     const handleOpenFolder = async () => {
         try {
@@ -65,6 +71,22 @@ function App() {
         } else {
             setActiveProject(p);
         }
+    };
+
+    const handleUpdateClick = (pkg: Package, version: string) => {
+        setPackageToUpdate(pkg);
+        setTargetVersion(version);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmUpdate = () => {
+        if (!packageToUpdate) return;
+
+        setIsModalOpen(false);
+        setShowTerminal(true);
+
+        const cmd = `> npm install ${packageToUpdate.name}@${targetVersion}`;
+        setTerminalOutput(prev => [...prev, cmd, "Simulating update... (Dry Run)", "Done (Mock)."]);
     };
 
     return (
@@ -118,7 +140,10 @@ function App() {
                                         selectedPackage={selectedPackage}
                                         onSelect={setSelectedPackage}
                                     />
-                                    <PackageDetails pkg={selectedPackage} />
+                                    <PackageDetails
+                                        pkg={selectedPackage}
+                                        onUpdate={handleUpdateClick}
+                                    />
                                 </>
                             )}
                         </div>
@@ -135,6 +160,13 @@ function App() {
                 isVisible={showTerminal}
                 output={terminalOutput}
                 onClose={() => setShowTerminal(false)}
+            />
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                packageToUpdate={packageToUpdate}
+                targetVersion={targetVersion}
+                onConfirm={handleConfirmUpdate}
+                onCancel={() => setIsModalOpen(false)}
             />
         </div>
     );
