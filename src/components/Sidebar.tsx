@@ -1,5 +1,5 @@
-import React from 'react';
 import { Project } from '../types';
+import { texts } from '../i18n/texts';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -19,12 +19,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <aside className="sidebar">
             <div className="sidebar-header">
                 <button onClick={onOpenFolder} className="btn-icon">
-                    📂 Open Folder
+                    📂 {texts.sidebar.openFolder}
                 </button>
             </div>
 
             <div className="sidebar-section">
-                <h3>PROJEKTY</h3>
+                <h3>{texts.sidebar.projectsHeader}</h3>
                 <ul className="project-list">
                     {projects.map((p) => (
                         <li

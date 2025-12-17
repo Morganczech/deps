@@ -5,6 +5,7 @@ import { Terminal } from "./components/Terminal";
 import { PackageTable } from "./components/PackageTable";
 import { PackageDetails } from "./components/PackageDetails";
 import { api } from "./lib/api";
+import { texts } from "./i18n/texts";
 import "./App.css";
 
 function App() {
@@ -85,17 +86,30 @@ function App() {
                             {isLoading ? (
                                 <div className="loading-state">
                                     <div className="spinner"></div>
-                                    <p>Scanning dependencies...</p>
+                                    <p>{texts.states.loading}</p>
                                 </div>
                             ) : error ? (
                                 <div className="error-state">
-                                    <h3>⚠️ Error Loading Project</h3>
-                                    <p>{error}</p>
-                                    <button onClick={() => window.location.reload()}>Reload App</button>
+                                    <h3>{texts.states.errorHeader}</h3>
+                                    <p className="error-message">{error}</p>
+                                    {error.includes("npm install") && (
+                                        <div className="error-actions">
+                                            <p className="hint">{texts.states.nodeModulesMissing}</p>
+                                            <button className="btn-primary" onClick={() => alert(texts.states.installHint)}>
+                                                {texts.states.installDependencies}
+                                            </button>
+                                        </div>
+                                    )}
+                                    <button className="btn-secondary" onClick={() => activeProject && fetchPackages(activeProject)}>
+                                        {texts.app.retry}
+                                    </button>
                                 </div>
                             ) : packages.length === 0 ? (
                                 <div className="empty-project-state">
-                                    <p>No dependencies found in this project.</p>
+                                    <div className="empty-content">
+                                        <h3>{texts.states.noDependenciesHeader}</h3>
+                                        <p>{texts.states.noDependenciesMessage}</p>
+                                    </div>
                                 </div>
                             ) : (
                                 <>

@@ -1,5 +1,5 @@
-import React from 'react';
 import { Package } from '../types';
+import { texts } from '../i18n/texts';
 import './PackageDetails.css';
 
 interface PackageDetailsProps {
@@ -10,7 +10,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg }) => {
     if (!pkg) {
         return (
             <div className="details-panel empty">
-                <p>Select a package to view details</p>
+                <p>{texts.details.empty}</p>
             </div>
         );
     }
@@ -24,20 +24,20 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg }) => {
 
             {pkg.update_status === 'Major' && (
                 <div className="alert-major">
-                    ⚠️ Existuje major aktualizace s možnými breaking changes.
+                    {texts.details.majorWarning}
                 </div>
             )}
 
             <div className="details-actions">
                 {pkg.update_status !== 'UpToDate' && (
                     <button className="btn-primary">
-                        Aktualizovat na {pkg.wanted_version || pkg.latest_version}
+                        {texts.details.updateTo} {pkg.wanted_version || pkg.latest_version}
                     </button>
                 )}
 
                 {pkg.update_status === 'Major' && (
                     <button className="btn-warning">
-                        Vynutit aktualizaci na {pkg.latest_version} (Major)
+                        {texts.details.forceUpdate} {pkg.latest_version} (Major)
                     </button>
                 )}
             </div>
