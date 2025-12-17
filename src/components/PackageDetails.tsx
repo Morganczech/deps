@@ -98,7 +98,37 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
             </div>
 
             <div className="links">
-                <a href="#">GitHub</a> | <a href="#">Homepage</a> | <a href="#">npm</a>
+                <a
+                    href={`https://www.npmjs.com/package/${pkg.name}`}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    {texts.details.links.npm}
+                </a>
+                {pkg.repository && (
+                    <>
+                        {" | "}
+                        <a
+                            href={pkg.repository}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {texts.details.links.github}
+                        </a>
+                    </>
+                )}
+                {pkg.homepage && pkg.homepage !== pkg.repository && (
+                    <>
+                        {" | "}
+                        <a
+                            href={pkg.homepage}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {texts.details.links.homepage}
+                        </a>
+                    </>
+                )}
             </div>
         </div>
     );

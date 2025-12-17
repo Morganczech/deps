@@ -20,6 +20,7 @@ const MOCK_PACKAGES: Package[] = [
         latest_version: "18.3.0",
         update_status: "UpToDate",
         is_dev: false,
+        repository: "https://github.com/facebook/react",
     },
     {
         name: "typescript",
@@ -28,6 +29,7 @@ const MOCK_PACKAGES: Package[] = [
         latest_version: "5.3.3",
         update_status: "Major",
         is_dev: true,
+        repository: "https://github.com/microsoft/TypeScript",
     },
     {
         name: "vite",
@@ -36,6 +38,7 @@ const MOCK_PACKAGES: Package[] = [
         latest_version: "5.1.0",
         update_status: "Minor",
         is_dev: true,
+        repository: "https://github.com/vitejs/vite",
     },
     {
         name: "axios",

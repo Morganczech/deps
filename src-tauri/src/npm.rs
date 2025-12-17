@@ -14,6 +14,12 @@ struct PackageJson {
     dev_dependencies: Option<HashMap<String, String>>,
 }
 
+#[derive(Deserialize)]
+struct MetadataPackageJson {
+    repository: Option<serde_json::Value>, // Can be string or object
+    homepage: Option<String>,
+}
+
 #[derive(Deserialize, Debug)]
 struct OutdatedInfo {
     current: Option<String>,
@@ -90,6 +96,32 @@ pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
                     UpdateStatus::UpToDate
                 };
 
+                // Read metadata from node_modules if exists
+                let mut repository = None;
+                let mut homepage = None;
+                let module_pkg_path = Path::new(&project_path).join("node_modules").join(&name).join("package.json");
+                
+                if module_pkg_path.exists() {
+                    if let Ok(content) = fs::read_to_string(&module_pkg_path) {
+                        if let Ok(meta) = serde_json::from_str::<MetadataPackageJson>(&content) {
+                            homepage = meta.homepage;
+                            
+                            // Normalize repository field
+                            if let Some(repo) = meta.repository {
+                                repository = match repo {
+                                    serde_json::Value::String(s) => Some(s),
+                                    serde_json::Value::Object(o) => o.get("url").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                                    _ => None,
+                                };
+                                // Clean up git+ prefixes/suffixes
+                                if let Some(ref mut r) = repository {
+                                    *r = r.replace("git+", "").replace(".git", "");
+                                }
+                            }
+                        }
+                    }
+                }
+
                 packages.push(Package {
                     name,
                     current_version: current,
@@ -97,6 +129,8 @@ pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
                     latest_version: latest,
                     update_status: status,
                     is_dev,
+                    repository,
+                    homepage,
                 });
             }
         }
@@ -153,6 +187,8 @@ fn get_mock_packages() -> Vec<Package> {
             latest_version: Some("18.3.0".to_string()),
             update_status: UpdateStatus::UpToDate,
             is_dev: false,
+            homepage: Some("https://reactjs.org".to_string()),
+            repository: Some("https://github.com/facebook/react".to_string()),
         },
         Package {
             name: "typescript".to_string(),
@@ -161,6 +197,8 @@ fn get_mock_packages() -> Vec<Package> {
             latest_version: Some("5.3.3".to_string()),
             update_status: UpdateStatus::Major,
             is_dev: true,
+            homepage: Some("https://www.typescriptlang.org".to_string()),
+            repository: Some("https://github.com/microsoft/TypeScript".to_string()),
         },
         Package {
             name: "vite".to_string(),
@@ -169,6 +207,8 @@ fn get_mock_packages() -> Vec<Package> {
             latest_version: Some("5.1.0".to_string()),
             update_status: UpdateStatus::Minor,
             is_dev: true,
+            homepage: None,
+            repository: Some("https://github.com/vitejs/vite".to_string()),
         },
         Package {
              name: "axios".to_string(),
@@ -177,6 +217,8 @@ fn get_mock_packages() -> Vec<Package> {
              latest_version: Some("1.6.0".to_string()),
              update_status: UpdateStatus::Major,
              is_dev: false,
+             homepage: None,
+             repository: None,
         }
     ]
 }

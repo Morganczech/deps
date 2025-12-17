@@ -14,4 +14,6 @@ export interface Package {
     latest_version?: string;
     update_status: UpdateStatus;
     is_dev: boolean;
+    repository?: string;
+    homepage?: string;
 }

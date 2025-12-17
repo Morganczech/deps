@@ -24,4 +24,6 @@ pub struct Package {
     pub latest_version: Option<String>,
     pub update_status: UpdateStatus,
     pub is_dev: bool,
+    pub repository: Option<String>,
+    pub homepage: Option<String>,
 }
