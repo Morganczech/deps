@@ -216,6 +216,7 @@ function App() {
                                         isReadOnly={!activeProject.is_writable}
                                         onUpdate={handleUpdateClick}
                                         onInstallSpecific={handleInstallSpecific}
+                                        onReadOnlyWarning={() => setToastMessage(texts.app.readOnlyTooltip)}
                                     />
                                 </>
                             )}

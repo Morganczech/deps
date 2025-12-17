@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Package } from '../types';
 import { texts } from '../i18n/texts';
 import './PackageDetails.css';
@@ -8,6 +9,7 @@ interface PackageDetailsProps {
     isReadOnly: boolean;
     onUpdate: (pkg: Package, version: string) => void;
     onInstallSpecific: (pkg: Package) => void;
+    onReadOnlyWarning: () => void;
 }
 
 export const PackageDetails: React.FC<PackageDetailsProps> = ({
@@ -15,8 +17,18 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
     isUpdating,
     isReadOnly,
     onUpdate,
-    onInstallSpecific
+    onInstallSpecific,
+    onReadOnlyWarning
 }) => {
+    const [shakingPkg, setShakingPkg] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (shakingPkg) {
+            const timer = setTimeout(() => setShakingPkg(null), 500);
+            return () => clearTimeout(timer);
+        }
+    }, [shakingPkg]);
+
     if (!pkg) {
         return (
             <div className="details-panel empty">
@@ -25,7 +37,20 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
         );
     }
 
-    const isDisabled = isUpdating || isReadOnly;
+    const handleAction = (action: () => void) => {
+        if (isUpdating) return; // Should be handled by native disabled
+        if (isReadOnly) {
+            setShakingPkg(pkg.name);
+            onReadOnlyWarning();
+            return;
+        }
+        action();
+    };
+
+    // If updating, native disable. If ReadOnly, custom locked class + clickable.
+    const isLocked = isReadOnly && !isUpdating;
+    const btnClass = (base: string) =>
+        `${base} ${isLocked ? 'btn-locked' : ''} ${shakingPkg === pkg.name ? 'shake' : ''}`;
 
     return (
         <div className="details-panel">
@@ -43,9 +68,9 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
             <div className="details-actions">
                 {pkg.update_status !== 'UpToDate' && (
                     <button
-                        className="btn-primary"
-                        onClick={() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || "")}
-                        disabled={isDisabled}
+                        className={btnClass("btn-primary")}
+                        onClick={() => handleAction(() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || ""))}
+                        disabled={isUpdating}
                     >
                         {texts.details.updateTo} {pkg.wanted_version || pkg.latest_version}
                     </button>
@@ -53,9 +78,9 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
 
                 {pkg.update_status === 'Major' && (
                     <button
-                        className="btn-warning"
-                        onClick={() => onUpdate(pkg, pkg.latest_version || "")}
-                        disabled={isDisabled}
+                        className={btnClass("btn-warning")}
+                        onClick={() => handleAction(() => onUpdate(pkg, pkg.latest_version || ""))}
+                        disabled={isUpdating}
                     >
                         {texts.details.forceUpdate} {pkg.latest_version} (Major)
                     </button>
@@ -64,9 +89,9 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
 
             <div className="details-actions-secondary">
                 <button
-                    className="btn-text"
-                    onClick={() => onInstallSpecific(pkg)}
-                    disabled={isDisabled}
+                    className={btnClass("btn-text")}
+                    onClick={() => handleAction(() => onInstallSpecific(pkg))}
+                    disabled={isUpdating}
                 >
                     {texts.details.installSpecific}
                 </button>
