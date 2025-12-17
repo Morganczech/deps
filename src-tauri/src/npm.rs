@@ -111,6 +111,39 @@ pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
     Ok(packages)
 }
 
+#[tauri::command]
+pub fn update_package(project_path: String, package_name: String, version: String) -> Result<(), String> {
+    if USE_MOCK {
+        // Just return Ok for mock mode
+        return Ok(());
+    }
+
+    // Safety 1: Check if project path exists
+    let path = Path::new(&project_path);
+    if !path.exists() {
+        return Err("Project path does not exist".to_string());
+    }
+
+    // Safety 2: Check if node_modules exists
+    if !path.join("node_modules").exists() {
+        return Err("node_modules missing. Please run npm install first.".to_string());
+    }
+
+    // Run npm install package@version
+    let output = Command::new("npm")
+        .args(["install", &format!("{}@{}", package_name, version)])
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| format!("Failed to execute npm: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("npm install failed: {}", stderr));
+    }
+
+    Ok(())
+}
+
 fn get_mock_packages() -> Vec<Package> {
     vec![
         Package {

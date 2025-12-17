@@ -88,5 +88,16 @@ export const api = {
             await new Promise(r => setTimeout(r, 800));
             return MOCK_PACKAGES;
         }
+    },
+
+    updatePackage: async (projectPath: string, packageName: string, version: string): Promise<void> => {
+        if (isTauri()) {
+            return await invoke<void>("update_package", { projectPath, packageName, version });
+        } else {
+            console.warn(`Running in Web Mode: Simulating update for ${packageName}@${version}`);
+            await new Promise(r => setTimeout(r, 2000)); // Simulate mock install time
+            // In a real mock scenario, we might want to update MOCK_PACKAGES here
+            return;
+        }
     }
 };

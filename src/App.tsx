@@ -5,6 +5,7 @@ import { Terminal } from "./components/Terminal";
 import { PackageTable } from "./components/PackageTable";
 import { PackageDetails } from "./components/PackageDetails";
 import { ConfirmationModal } from "./components/ConfirmationModal";
+import { Toast } from "./components/Toast";
 import { api } from "./lib/api";
 import { texts } from "./i18n/texts";
 import "./App.css";
@@ -16,6 +17,7 @@ function App() {
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     // Update Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,14 +81,29 @@ function App() {
         setIsModalOpen(true);
     };
 
-    const handleConfirmUpdate = () => {
-        if (!packageToUpdate) return;
+    const handleConfirmUpdate = async () => {
+        if (!packageToUpdate || !activeProject) return;
 
         setIsModalOpen(false);
         setShowTerminal(true);
 
         const cmd = `> npm install ${packageToUpdate.name}@${targetVersion}`;
-        setTerminalOutput(prev => [...prev, cmd, "Simulating update... (Dry Run)", "Done (Mock)."]);
+        setTerminalOutput(prev => [...prev, cmd, "Starting update..."]);
+
+        try {
+            await api.updatePackage(activeProject.path, packageToUpdate.name, targetVersion);
+
+            setTerminalOutput(prev => [...prev, "✅ Update completed successfully."]);
+            setToastMessage("Update completed");
+
+            // Refresh logic
+            fetchPackages(activeProject);
+
+        } catch (e) {
+            const errMsg = typeof e === 'string' ? e : "Unknown error during update";
+            setTerminalOutput(prev => [...prev, `❌ Error: ${errMsg}`]);
+            console.error(e);
+        }
     };
 
     return (
@@ -168,6 +185,7 @@ function App() {
                 onConfirm={handleConfirmUpdate}
                 onCancel={() => setIsModalOpen(false)}
             />
+            <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
         </div>
     );
 }
