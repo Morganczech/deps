@@ -13,6 +13,8 @@ function App() {
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const [packages, setPackages] = useState<Package[]>([]);
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const [showTerminal, setShowTerminal] = useState(true);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -38,13 +40,22 @@ function App() {
 
     useEffect(() => {
         if (activeProject) {
+            setIsLoading(true);
+            setError(null);
+            setPackages([]);
+            setSelectedPackage(null);
+
             // Fetch packages for the active project
             invoke<Package[]>("get_packages", { projectPath: activeProject.path })
                 .then((pkgs) => {
                     setPackages(pkgs);
                     if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
                 })
-                .catch(console.error);
+                .catch((err) => {
+                    console.error(err);
+                    setError(typeof err === 'string' ? err : "Failed to load packages");
+                })
+                .finally(() => setIsLoading(false));
         }
     }, [activeProject]);
 
@@ -64,12 +75,31 @@ function App() {
                             <span className="project-version">v{activeProject.version}</span>
                         </header>
                         <div className="content-split">
-                            <PackageTable
-                                packages={packages}
-                                selectedPackage={selectedPackage}
-                                onSelect={setSelectedPackage}
-                            />
-                            <PackageDetails pkg={selectedPackage} />
+                            {isLoading ? (
+                                <div className="loading-state">
+                                    <div className="spinner"></div>
+                                    <p>Scanning dependencies...</p>
+                                </div>
+                            ) : error ? (
+                                <div className="error-state">
+                                    <h3>⚠️ Error Loading Project</h3>
+                                    <p>{error}</p>
+                                    <button onClick={() => window.location.reload()}>Reload App</button>
+                                </div>
+                            ) : packages.length === 0 ? (
+                                <div className="empty-project-state">
+                                    <p>No dependencies found in this project.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <PackageTable
+                                        packages={packages}
+                                        selectedPackage={selectedPackage}
+                                        onSelect={setSelectedPackage}
+                                    />
+                                    <PackageDetails pkg={selectedPackage} />
+                                </>
+                            )}
                         </div>
                     </div>
                 ) : (

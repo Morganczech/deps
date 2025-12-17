@@ -22,37 +22,44 @@ struct OutdatedInfo {
 }
 
 #[tauri::command]
-pub fn get_packages(project_path: String) -> Vec<Package> {
+#[tauri::command]
+pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
     if USE_MOCK {
-        return get_mock_packages();
+        return Ok(get_mock_packages());
     }
 
     let mut packages = Vec::new();
     
     // 1. Parse package.json for base list
     let pkg_json_path = Path::new(&project_path).join("package.json");
-    let pkg_json_content = match fs::read_to_string(pkg_json_path) {
-        Ok(c) => c,
-        Err(_) => return vec![], // or error
-    };
+    if !pkg_json_path.exists() {
+        return Err("package.json not found".to_string());
+    }
 
-    let pkg_json: PackageJson = match serde_json::from_str(&pkg_json_content) {
-        Ok(p) => p,
-        Err(_) => return vec![],
-    };
+    let pkg_json_content = fs::read_to_string(&pkg_json_path)
+        .map_err(|e| format!("Failed to read package.json: {}", e))?;
+
+    let pkg_json: PackageJson = serde_json::from_str(&pkg_json_content)
+        .map_err(|e| format!("Failed to parse package.json: {}", e))?;
 
     // 2. Run npm outdated --json
-    // Exit code 0 = all good, 1 = outdated packages exist. Both are success for us.
+    // Exit code 0 = all good, 1 = outdated packages exist.
     let output = Command::new("npm")
         .args(["outdated", "--json"])
         .current_dir(&project_path)
-        .output();
+        .output()
+        .map_err(|e| format!("Failed to execute npm: {}", e))?;
 
-    let outdated_map: HashMap<String, OutdatedInfo> = match output {
-        Ok(out) => {
-            serde_json::from_slice(&out.stdout).unwrap_or_default()
-        },
-        Err(_) => HashMap::new(),
+    let outdated_map: HashMap<String, OutdatedInfo> = if output.status.success() || output.status.code() == Some(1) {
+        serde_json::from_slice(&out.stdout).unwrap_or_default()
+    } else {
+        // If exit code is not 0 or 1, it might be a real error (e.g. missing node_modules)
+        // We can capture stderr
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        if stderr.contains("Cannot find module") || !Path::new(&project_path).join("node_modules").exists() {
+             return Err("Missing node_modules? Try running npm install.".to_string());
+        }
+        return Err(format!("npm exited with error: {}", stderr));
     };
 
     // 3. Merge
@@ -62,19 +69,17 @@ pub fn get_packages(project_path: String) -> Vec<Package> {
                 let outdated = outdated_map.get(&name);
                 
                 let current = outdated.and_then(|o| o.current.clone())
-                    .unwrap_or_else(|| version_range.clone()); // Fallback to declared range if not in outdated (simplification)
+                    .unwrap_or_else(|| version_range.clone()); 
                 
                 let wanted = outdated.and_then(|o| o.wanted.clone());
                 let latest = outdated.and_then(|o| o.latest.clone());
                 
                 let status = if let Some(out) = outdated {
-                    // Logic to determine Major/Minor
-                    // Simple check on wanted vs latest
                     if let (Some(w), Some(l)) = (&out.wanted, &out.latest) {
                         if w != l {
-                            UpdateStatus::Major // Wanted != Latest usually impies Major (if semantics hold)
+                            UpdateStatus::Major 
                         } else if out.current.as_ref() != Some(w) {
-                             UpdateStatus::Minor // Wanted != Current, but Wanted == Latest
+                             UpdateStatus::Minor
                         } else {
                             UpdateStatus::UpToDate
                         }
@@ -103,7 +108,7 @@ pub fn get_packages(project_path: String) -> Vec<Package> {
     // Sort by name
     packages.sort_by(|a, b| a.name.cmp(&b.name));
 
-    packages
+    Ok(packages)
 }
 
 fn get_mock_packages() -> Vec<Package> {
