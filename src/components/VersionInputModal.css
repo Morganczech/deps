@@ -1,0 +1,27 @@
+.input-modal {
+    width: 350px;
+}
+
+.version-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.version-input:focus {
+    outline: none;
+    border-color: #3584e4;
+}
+
+.input-error {
+    color: #ff7b7b;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    margin-bottom: 0;
+}

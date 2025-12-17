@@ -6,9 +6,10 @@ interface PackageDetailsProps {
     pkg: Package | null;
     isUpdating: boolean;
     onUpdate: (pkg: Package, version: string) => void;
+    onInstallSpecific: (pkg: Package) => void;
 }
 
-export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating, onUpdate }) => {
+export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating, onUpdate, onInstallSpecific }) => {
     if (!pkg) {
         return (
             <div className="details-panel empty">
@@ -50,6 +51,16 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating,
                         {texts.details.forceUpdate} {pkg.latest_version} (Major)
                     </button>
                 )}
+            </div>
+
+            <div className="details-actions-secondary">
+                <button
+                    className="btn-text"
+                    onClick={() => onInstallSpecific(pkg)}
+                    disabled={isUpdating}
+                >
+                    {texts.details.installSpecific}
+                </button>
             </div>
 
             <div className="links">

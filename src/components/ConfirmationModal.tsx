@@ -7,6 +7,7 @@ interface ConfirmationModalProps {
     isOpen: boolean;
     packageToUpdate: Package | null;
     targetVersion: string;
+    customWarning?: string | null;
     onConfirm: () => void;
     onCancel: () => void;
 }
@@ -15,6 +16,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     isOpen,
     packageToUpdate,
     targetVersion,
+    customWarning,
     onConfirm,
     onCancel
 }) => {
@@ -28,7 +30,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     if (!isOpen || !packageToUpdate) return null;
 
     const isMajor = packageToUpdate.update_status === 'Major';
-    const canConfirm = !isMajor || isConfirmed;
+    const showWarning = isMajor || !!customWarning;
+    const canConfirm = !showWarning || isConfirmed;
 
     return (
         <div className="modal-overlay">
@@ -43,16 +46,16 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         <span className="arrow">→</span>
                         <span className="version-new">{targetVersion}</span>
                     </div>
-                    {isMajor && (
+                    {showWarning && (
                         <div className="modal-warning">
-                            <p>{texts.details.majorWarning}</p>
+                            <p>{customWarning || texts.details.majorWarning}</p>
                             <label className="confirmation-checkbox">
                                 <input
                                     type="checkbox"
                                     checked={isConfirmed}
                                     onChange={(e) => setIsConfirmed(e.target.checked)}
                                 />
-                                I understand this may introduce breaking changes.
+                                I understand the risk.
                             </label>
                         </div>
                     )}

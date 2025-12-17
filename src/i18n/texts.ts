@@ -35,6 +35,7 @@ export const texts = {
             homepage: "Homepage",
             npm: "npm",
         },
+        installSpecific: "Install specific version...",
     },
     states: {
         loading: "Scanning dependencies...",
@@ -44,5 +45,6 @@ export const texts = {
         installHint: "Please run 'npm install' in your terminal.",
         noDependenciesHeader: "No Dependencies",
         noDependenciesMessage: "This project has no packages listed in package.json.",
+        downgradeWarning: "⚠️ You are about to downgrade this package. This is risky.",
     }
 };

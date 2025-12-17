@@ -5,6 +5,7 @@ import { Terminal } from "./components/Terminal";
 import { PackageTable } from "./components/PackageTable";
 import { PackageDetails } from "./components/PackageDetails";
 import { ConfirmationModal } from "./components/ConfirmationModal";
+import { VersionInputModal } from "./components/VersionInputModal";
 import { Toast } from "./components/Toast";
 import { api } from "./lib/api";
 import { texts } from "./i18n/texts";
@@ -23,8 +24,10 @@ function App() {
 
     // Update Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isInputModalOpen, setIsInputModalOpen] = useState(false);
     const [packageToUpdate, setPackageToUpdate] = useState<Package | null>(null);
     const [targetVersion, setTargetVersion] = useState("");
+    const [customWarning, setCustomWarning] = useState<string | null>(null);
 
     const [showTerminal, setShowTerminal] = useState(true);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -80,6 +83,41 @@ function App() {
     const handleUpdateClick = (pkg: Package, version: string) => {
         setPackageToUpdate(pkg);
         setTargetVersion(version);
+        setCustomWarning(null); // standard update
+        setIsModalOpen(true);
+    };
+
+    const handleInstallSpecific = (pkg: Package) => {
+        setPackageToUpdate(pkg);
+        setIsInputModalOpen(true);
+    };
+
+    const compareVersions = (v1: string, v2: string) => {
+        // Remove 'v' prefix or similar if present, though we expect clean semver
+        const cleanV1 = v1.replace(/[^0-9.]/g, '');
+        const cleanV2 = v2.replace(/[^0-9.]/g, '');
+        const p1 = cleanV1.split('.').map(Number);
+        const p2 = cleanV2.split('.').map(Number);
+        for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+            const n1 = p1[i] || 0;
+            const n2 = p2[i] || 0;
+            if (n1 > n2) return 1;
+            if (n1 < n2) return -1;
+        }
+        return 0;
+    };
+
+    const handleVersionInputConfirm = (version: string) => {
+        setIsInputModalOpen(false);
+        setTargetVersion(version);
+
+        // Downgrade Check
+        if (packageToUpdate && compareVersions(version, packageToUpdate.current_version) < 0) {
+            setCustomWarning(texts.states.downgradeWarning);
+        } else {
+            setCustomWarning(null);
+        }
+
         setIsModalOpen(true);
     };
 
@@ -171,6 +209,7 @@ function App() {
                                         pkg={selectedPackage}
                                         isUpdating={isUpdating}
                                         onUpdate={handleUpdateClick}
+                                        onInstallSpecific={handleInstallSpecific}
                                     />
                                 </>
                             )}
@@ -193,8 +232,15 @@ function App() {
                 isOpen={isModalOpen}
                 packageToUpdate={packageToUpdate}
                 targetVersion={targetVersion}
+                customWarning={customWarning}
                 onConfirm={handleConfirmUpdate}
                 onCancel={() => setIsModalOpen(false)}
+            />
+            <VersionInputModal
+                isOpen={isInputModalOpen}
+                packageName={packageToUpdate?.name || ""}
+                onConfirm={handleVersionInputConfirm}
+                onCancel={() => setIsInputModalOpen(false)}
             />
             <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
         </div>
