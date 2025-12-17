@@ -39,6 +39,16 @@
     color: white;
 }
 
+.flash-update {
+    animation: flash-green 2s ease-out;
+}
+
+@keyframes flash-green {
+    0% { background-color: #26a269; color: white; }
+    50% { background-color: rgba(38, 162, 105, 0.3); }
+    100% { background-color: transparent; }
+}
+
 .col-name {
     font-weight: 500;
 }

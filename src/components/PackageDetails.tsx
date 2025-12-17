@@ -4,10 +4,11 @@ import './PackageDetails.css';
 
 interface PackageDetailsProps {
     pkg: Package | null;
+    isUpdating: boolean;
     onUpdate: (pkg: Package, version: string) => void;
 }
 
-export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, onUpdate }) => {
+export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating, onUpdate }) => {
     if (!pkg) {
         return (
             <div className="details-panel empty">
@@ -34,6 +35,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, onUpdate })
                     <button
                         className="btn-primary"
                         onClick={() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || "")}
+                        disabled={isUpdating}
                     >
                         {texts.details.updateTo} {pkg.wanted_version || pkg.latest_version}
                     </button>
@@ -43,6 +45,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, onUpdate })
                     <button
                         className="btn-warning"
                         onClick={() => onUpdate(pkg, pkg.latest_version || "")}
+                        disabled={isUpdating}
                     >
                         {texts.details.forceUpdate} {pkg.latest_version} (Major)
                     </button>

@@ -16,8 +16,10 @@ function App() {
     const [packages, setPackages] = useState<Package[]>([]);
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [lastUpdatedPackage, setLastUpdatedPackage] = useState<string | null>(null);
 
     // Update Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,23 +88,30 @@ function App() {
 
         setIsModalOpen(false);
         setShowTerminal(true);
+        setIsUpdating(true);
 
-        const cmd = `> npm install ${packageToUpdate.name}@${targetVersion}`;
-        setTerminalOutput(prev => [...prev, cmd, "Starting update..."]);
+        const timestamp = new Date().toLocaleTimeString();
+        const cmd = `[${timestamp}] > npm install ${packageToUpdate.name}@${targetVersion}`;
+        setTerminalOutput(prev => [...prev, cmd, `[${timestamp}] Starting update...`]);
 
         try {
             await api.updatePackage(activeProject.path, packageToUpdate.name, targetVersion);
 
-            setTerminalOutput(prev => [...prev, "✅ Update completed successfully."]);
+            const endTimestamp = new Date().toLocaleTimeString();
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ Update completed successfully.`]);
             setToastMessage("Update completed");
+            setLastUpdatedPackage(packageToUpdate.name);
 
             // Refresh logic
             fetchPackages(activeProject);
 
         } catch (e) {
+            const endTimestamp = new Date().toLocaleTimeString();
             const errMsg = typeof e === 'string' ? e : "Unknown error during update";
-            setTerminalOutput(prev => [...prev, `❌ Error: ${errMsg}`]);
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ❌ Error: ${errMsg}`]);
             console.error(e);
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -156,9 +165,11 @@ function App() {
                                         packages={packages}
                                         selectedPackage={selectedPackage}
                                         onSelect={setSelectedPackage}
+                                        lastUpdatedPackage={lastUpdatedPackage}
                                     />
                                     <PackageDetails
                                         pkg={selectedPackage}
+                                        isUpdating={isUpdating}
                                         onUpdate={handleUpdateClick}
                                     />
                                 </>

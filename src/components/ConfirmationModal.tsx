@@ -18,7 +18,17 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     onConfirm,
     onCancel
 }) => {
+    const [isConfirmed, setIsConfirmed] = React.useState(false);
+
+    // Reset state when modal opens
+    React.useEffect(() => {
+        if (isOpen) setIsConfirmed(false);
+    }, [isOpen]);
+
     if (!isOpen || !packageToUpdate) return null;
+
+    const isMajor = packageToUpdate.update_status === 'Major';
+    const canConfirm = !isMajor || isConfirmed;
 
     return (
         <div className="modal-overlay">
@@ -33,15 +43,29 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         <span className="arrow">→</span>
                         <span className="version-new">{targetVersion}</span>
                     </div>
-                    {packageToUpdate.update_status === 'Major' && (
+                    {isMajor && (
                         <div className="modal-warning">
-                            {texts.details.majorWarning}
+                            <p>{texts.details.majorWarning}</p>
+                            <label className="confirmation-checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={isConfirmed}
+                                    onChange={(e) => setIsConfirmed(e.target.checked)}
+                                />
+                                I understand this may introduce breaking changes.
+                            </label>
                         </div>
                     )}
                 </div>
                 <div className="modal-actions">
                     <button className="btn-secondary" onClick={onCancel}>Cancel</button>
-                    <button className="btn-primary" onClick={onConfirm}>Update</button>
+                    <button
+                        className="btn-primary"
+                        onClick={onConfirm}
+                        disabled={!canConfirm}
+                    >
+                        Update
+                    </button>
                 </div>
             </div>
         </div>

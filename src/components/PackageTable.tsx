@@ -5,10 +5,11 @@ import './PackageTable.css';
 interface PackageTableProps {
     packages: Package[];
     selectedPackage: Package | null;
+    lastUpdatedPackage: string | null;
     onSelect: (pkg: Package) => void;
 }
 
-export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPackage, onSelect }) => {
+export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPackage, lastUpdatedPackage, onSelect }) => {
 
     const getStatusBadge = (status: UpdateStatus) => {
         switch (status) {
@@ -35,7 +36,10 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
                     {packages.map((pkg) => (
                         <tr
                             key={pkg.name}
-                            className={selectedPackage?.name === pkg.name ? 'selected' : ''}
+                            className={`
+                                ${selectedPackage?.name === pkg.name ? 'selected' : ''}
+                                ${lastUpdatedPackage === pkg.name ? 'flash-update' : ''}
+                            `}
                             onClick={() => onSelect(pkg)}
                         >
                             <td className="col-name">{pkg.name}</td>
