@@ -149,3 +149,10 @@ The next milestone is a functional MVP that:
 Linux developers already have powerful tools.
 Deps exists to make dependency maintenance **clearer, calmer, and more intentional** —
 without sacrificing control or performance.
+
+---
+
+## 🛠️ Developer Notes
+
+**Tauri & Vite Ports**
+Tauri Dev uses the same port as Vite (1420). If you change the port in `vite.config.ts`, you must also update `devPath` in `src-tauri/tauri.conf.json`.
