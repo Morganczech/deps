@@ -33,33 +33,45 @@ function App() {
         }
     };
 
+    const fetchPackages = (project: Project) => {
+        setIsLoading(true);
+        setError(null);
+        setPackages([]);
+        setSelectedPackage(null);
+
+        api.getPackages(project.path)
+            .then((pkgs) => {
+                setPackages(pkgs);
+                if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
+            })
+            .catch((err) => {
+                console.error(err);
+                setError(typeof err === 'string' ? err : "Failed to load packages");
+            })
+            .finally(() => setIsLoading(false));
+    };
+
     useEffect(() => {
         if (activeProject) {
-            setIsLoading(true);
-            setError(null);
-            setPackages([]);
-            setSelectedPackage(null);
-
-            // Fetch packages for the active project
-            api.getPackages(activeProject.path)
-                .then((pkgs) => {
-                    setPackages(pkgs);
-                    if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    setError(typeof err === 'string' ? err : "Failed to load packages");
-                })
-                .finally(() => setIsLoading(false));
+            fetchPackages(activeProject);
         }
     }, [activeProject]);
+
+    const handleProjectSelect = (p: Project) => {
+        if (activeProject?.path === p.path) {
+            // Refresh if clicking active
+            fetchPackages(p);
+        } else {
+            setActiveProject(p);
+        }
+    };
 
     return (
         <div className="app-container">
             <Sidebar
                 projects={projects}
                 activeProject={activeProject}
-                onSelectProject={setActiveProject}
+                onSelectProject={handleProjectSelect}
                 onOpenFolder={handleOpenFolder}
             />
             <main className="main-content">
