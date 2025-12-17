@@ -5,11 +5,18 @@ import './PackageDetails.css';
 interface PackageDetailsProps {
     pkg: Package | null;
     isUpdating: boolean;
+    isReadOnly: boolean;
     onUpdate: (pkg: Package, version: string) => void;
     onInstallSpecific: (pkg: Package) => void;
 }
 
-export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating, onUpdate, onInstallSpecific }) => {
+export const PackageDetails: React.FC<PackageDetailsProps> = ({
+    pkg,
+    isUpdating,
+    isReadOnly,
+    onUpdate,
+    onInstallSpecific
+}) => {
     if (!pkg) {
         return (
             <div className="details-panel empty">
@@ -17,6 +24,8 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating,
             </div>
         );
     }
+
+    const isDisabled = isUpdating || isReadOnly;
 
     return (
         <div className="details-panel">
@@ -36,7 +45,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating,
                     <button
                         className="btn-primary"
                         onClick={() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || "")}
-                        disabled={isUpdating}
+                        disabled={isDisabled}
                     >
                         {texts.details.updateTo} {pkg.wanted_version || pkg.latest_version}
                     </button>
@@ -46,7 +55,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating,
                     <button
                         className="btn-warning"
                         onClick={() => onUpdate(pkg, pkg.latest_version || "")}
-                        disabled={isUpdating}
+                        disabled={isDisabled}
                     >
                         {texts.details.forceUpdate} {pkg.latest_version} (Major)
                     </button>
@@ -57,7 +66,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({ pkg, isUpdating,
                 <button
                     className="btn-text"
                     onClick={() => onInstallSpecific(pkg)}
-                    disabled={isUpdating}
+                    disabled={isDisabled}
                 >
                     {texts.details.installSpecific}
                 </button>

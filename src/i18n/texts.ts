@@ -6,6 +6,8 @@ export const texts = {
         selectFolder: "Select Folder",
         reload: "Reload App",
         retry: "Retry",
+        readOnly: "Read-only",
+        readOnlyTooltip: "This project is read-only. Updates are disabled.",
     },
     sidebar: {
         openFolder: "Open Folder",

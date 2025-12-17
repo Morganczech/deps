@@ -8,8 +8,8 @@ const isTauri = () => {
 
 // Mock data for Web Mode
 const MOCK_PROJECTS: Project[] = [
-    { name: "demo-project", path: "/home/user/demo/demo-project", version: "1.0.0" },
-    { name: "another-app", path: "/home/user/demo/another-app", version: "0.5.0" }
+    { name: "demo-project", path: "/home/user/demo/demo-project", version: "1.0.0", is_writable: true },
+    { name: "another-app", path: "/home/user/demo/another-app", version: "0.5.0", is_writable: false } // Test Read-only
 ];
 
 const MOCK_PACKAGES: Package[] = [

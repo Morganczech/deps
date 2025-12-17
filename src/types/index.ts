@@ -2,6 +2,7 @@ export interface Project {
     name: string;
     path: string;
     version: string;
+    is_writable: boolean;
 }
 
 export type UpdateStatus = 'UpToDate' | 'Minor' | 'Major' | 'Error';

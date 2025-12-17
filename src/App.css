@@ -61,7 +61,16 @@ button:hover {
     flex: 1;
     overflow: hidden;
 }
-
+.badge-readonly {
+    background-color: #3d3d3d;
+    color: #aeaeae;
+    border: 1px solid #555;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+    cursor: help;
+}
 .project-view {
     display: flex;
     flex-direction: column;

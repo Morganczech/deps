@@ -167,6 +167,11 @@ function App() {
                         <header className="project-header">
                             <h2>{activeProject.name}</h2>
                             <span className="project-version">v{activeProject.version}</span>
+                            {!activeProject.is_writable && (
+                                <span className="badge-readonly" title={texts.app.readOnlyTooltip}>
+                                    {texts.app.readOnly}
+                                </span>
+                            )}
                         </header>
                         <div className="content-split">
                             {isLoading ? (
@@ -208,6 +213,7 @@ function App() {
                                     <PackageDetails
                                         pkg={selectedPackage}
                                         isUpdating={isUpdating}
+                                        isReadOnly={!activeProject.is_writable}
                                         onUpdate={handleUpdateClick}
                                         onInstallSpecific={handleInstallSpecific}
                                     />

@@ -23,10 +23,16 @@ pub fn scan_projects(root_path: String) -> Result<Vec<Project>, String> {
                             let name = json["name"].as_str().unwrap_or("Unknown").to_string();
                             let version = json["version"].as_str().unwrap_or("0.0.0").to_string();
                             
+                            // Check write permissions
+                            let is_writable = !fs::metadata(&package_json_path)
+                                .map(|m| m.permissions().readonly())
+                                .unwrap_or(true); // Assume read-only if metadata fails (safe default)
+
                             projects.push(Project {
                                 name,
                                 path: path.to_string_lossy().to_string(),
                                 version,
+                                is_writable,
                             });
                         }
                      }
