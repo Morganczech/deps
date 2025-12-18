@@ -69,6 +69,15 @@ The initial version of Deps focuses on a minimal, reliable feature set.
 - Explicit confirmation required for major upgrades
 - Live command output visible during operations
 
+### 🛡️ Safety & UX Principles
+
+Deps prioritizes system stability and developer intent over convenience.
+
+- **Read-only Detection**: Automatically detects read-only projects (based on file permissions) and disables modification actions to prevent accidental state drift.
+- **Explicit Confirmations**: Major updates and downgrades require explicit user acknowledgment.
+- **No Background Activity**: Network calls and file writes happen *only* when you click a button.
+- **Install Specific Version**: Allows installing exact versions or downgrading with safety warnings.
+
 ---
 
 ## 🧱 Technology Stack
@@ -135,12 +144,12 @@ To keep Deps focused and maintainable, the following are explicitly out of scope
 
 ## 📦 Project Status
 
-Deps is currently in the **planning and architecture phase**.
+Deps is currently in **Early Stable / Technology Preview**.
 
-The next milestone is a functional MVP that:
-- scans local projects
-- displays dependency status
-- safely performs user-initiated updates
+The core MVP is fully functional and includes:
+- Local project scanning and dependency visualization
+- Safe execution of standard and major updates
+- Read-only protection and explicit confirmation flows
 
 ---
 
