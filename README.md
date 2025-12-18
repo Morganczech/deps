@@ -144,6 +144,29 @@ The next milestone is a functional MVP that:
 
 ---
 
+## 🐧 System Requirements (Linux)
+
+To build and run Deps on Linux, you need the following system development libraries installed.
+
+**Fedora:**
+```bash
+sudo dnf install webkit2gtk3-devel openssl-devel libappindicator-gtk3-devel librsvg2-devel
+```
+
+**Debian / Ubuntu:**
+```bash
+sudo apt-get install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+```
+
+**Arch:**
+```bash
+sudo pacman -S webkit2gtk base-devel curl wget openssl appmenu-gtk-module gtk3 libappindicator-gtk3 librsvg
+```
+
+Without these libraries, the Tauri build will fail.
+
+---
+
 ## 🐧 Why Deps Exists
 
 Linux developers already have powerful tools.

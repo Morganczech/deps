@@ -1,0 +1,4 @@
+[workspace]
+members = ["src-tauri"]
+exclude = ["node_modules"]
+
