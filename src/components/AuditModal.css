@@ -1,0 +1,226 @@
+/* Audit Modal specific styles */
+.audit-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+}
+
+.audit-modal-content {
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    border: 1px solid #444;
+    max-width: 500px;
+    width: 90%;
+    /* Fix for small screens */
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    
+    position: relative;
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.modal-body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0; /* Important for firefox/flex nesting */
+    padding-right: 5px; /* Space for scrollbar */
+}
+
+.close-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.audit-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+    gap: 15px;
+}
+
+.btn-secondary.btn-cancel {
+    margin-top: 20px;
+    min-width: 120px;
+}
+
+.hint {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.audit-summary-ring {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.security-shield {
+    font-size: 4rem;
+    margin-bottom: 10px;
+}
+
+.vulnerability-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.vuln-item {
+    background-color: #2a2a2a;
+    padding: 15px 5px;
+    border-radius: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    border-top: 3px solid transparent;
+}
+
+.vuln-item .count {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+}
+
+.vuln-item .label {
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.vuln-item.critical { border-color: #7d1a52; }
+.vuln-item.critical .count { color: #f695c9; }
+
+.vuln-item.high { border-color: #c01c28; }
+.vuln-item.high .count { color: #ff7b63; }
+
+.vuln-item.moderate { border-color: #e5a50a; }
+.vuln-item.moderate .count { color: #f8e45c; }
+
+.vuln-item.low { border-color: #26a269; }
+.vuln-item.low .count { color: #8ff0a4; }
+
+.audit-advice {
+    text-align: center;
+    color: #ccc;
+    font-style: italic;
+}
+
+.affected-packages {
+    margin-top: 30px;
+    text-align: left;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background-color: #222;
+}
+
+.affected-packages h5 {
+    margin: 0;
+    padding: 10px 15px;
+    background-color: #333;
+    border-bottom: 1px solid #444;
+    font-size: 0.9rem;
+    position: sticky;
+    top: 0;
+}
+
+.vuln-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.vuln-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 15px;
+    border-bottom: 1px solid #333;
+    font-size: 0.9rem;
+}
+
+.vuln-row:last-child {
+    border-bottom: none;
+}
+
+.vuln-row .pkg-name {
+    font-weight: bold;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.vuln-row .pkg-severity {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+}
+
+.vuln-row.critical .pkg-severity { background: rgba(192, 28, 40, 0.2); color: #ff7b63; border: 1px solid #c01c28; }
+.vuln-row.high .pkg-severity { background: rgba(192, 28, 40, 0.2); color: #ff7b63; border: 1px solid #c01c28; }
+.vuln-row.moderate .pkg-severity { background: rgba(229, 165, 10, 0.2); color: #f8e45c; border: 1px solid #e5a50a; }
+.vuln-row.low .pkg-severity { background: rgba(38, 162, 105, 0.2); color: #8ff0a4; border: 1px solid #26a269; }
+
+.vuln-row .pkg-title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ccc;
+    font-size: 0.85rem;
+}
+
+.vuln-row.empty {
+    padding: 20px;
+    color: #666;
+    justify-content: center;
+    font-style: italic;
+}

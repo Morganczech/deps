@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use tokio::process::Command; 
 use std::path::Path;
 use std::fs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::time::{timeout, Duration}; 
 use tauri::{Emitter, Window};
 use tokio::io::{BufReader, AsyncBufReadExt};
@@ -275,7 +275,184 @@ pub async fn install_dependencies(window: Window, project_path: String) -> Resul
     Ok(())
 }
 
+// ... (existing code)
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct AuditVulnerabilityCounts {
+    pub info: u32,
+    pub low: u32,
+    pub moderate: u32,
+    pub high: u32,
+    pub critical: u32,
+    pub total: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct VulnerablePackage {
+    pub name: String,
+    pub severity: String,
+    pub title: String,
+    pub range: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct AuditResult {
+    pub counts: AuditVulnerabilityCounts,
+    pub vulnerable_packages: Vec<VulnerablePackage>,
+}
+
+#[derive(Deserialize, Debug)]
+struct AuditMetadata {
+    vulnerabilities: AuditVulnerabilityCounts,
+}
+
+#[derive(Deserialize, Debug)]
+struct Advisory {
+    title: String,
+    module_name: String,
+    severity: String,
+    vulnerable_versions: String,
+    // ... other fields explicitly ignored
+}
+
+#[derive(Deserialize, Debug)]
+struct AuditOutput {
+    metadata: AuditMetadata,
+    advisories: Option<HashMap<String, Advisory>>, // npm audit changes format often, but this is common for --json
+    // Another format is 'vulnerabilities' object with detailed info
+    vulnerabilities: Option<serde_json::Value>, 
+}
+
+#[tauri::command]
+pub async fn run_audit(project_path: String) -> Result<AuditResult, String> {
+    if USE_MOCK {
+        return Ok(AuditResult {
+            counts: AuditVulnerabilityCounts {
+                info: 0,
+                low: 2,
+                moderate: 1,
+                high: 0,
+                critical: 0,
+                total: 3,
+            },
+            vulnerable_packages: vec![
+                VulnerablePackage { name: "lodash".to_string(), severity: "low".to_string(), title: "Prototype Pollution".to_string(), range: "<4.17.11".to_string() },
+                VulnerablePackage { name: "axios".to_string(), severity: "high".to_string(), title: "SSRF".to_string(), range: "<0.21.2".to_string() }
+            ]
+        });
+    }
+
+    let path = Path::new(&project_path);
+    if !path.exists() {
+        return Err("Project path does not exist".to_string());
+    }
+
+    // Checking lockfile helps avoid failure, but we run anyway.
+    
+    println!("Spawning npm audit for: {}", project_path);
+    let mut cmd = Command::new("npm");
+    cmd.args(["audit", "--json"])
+        .current_dir(&project_path)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .kill_on_drop(true);
+
+    let child = cmd.spawn()
+        .map_err(|e| format!("Failed to spawn npm audit: {}", e))?;
+
+    // npm audit can take time, give it 45s for larger projects
+    let output_result = timeout(Duration::from_secs(45), child.wait_with_output()).await;
+
+    let output = match output_result {
+        Ok(Ok(o)) => o,
+        Ok(Err(e)) => return Err(format!("Failed to wait for npm audit: {}", e)),
+        Err(_) => return Err("npm audit timed out".to_string()),
+    };
+
+    // npm audit returns exit code 1 if vulnerabilities are found.
+    // We try to parse stdout regardless.
+    
+    // Debug: Print raw output if needed
+    // let raw_str = String::from_utf8_lossy(&output.stdout);
+    // println!("Raw audit: {}", raw_str);
+
+    let parsed: AuditOutput = serde_json::from_slice(&output.stdout)
+        .map_err(|e| {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            format!("Failed to parse audit output: {}. Stderr: {}", e, stderr)
+        })?;
+
+    let mut vulnerable_packages = Vec::new();
+
+    // Parse 'advisories' format (older npm) or 'vulnerabilities' (newer npm)
+    // Actually, modern npm audit --json (npm 7+) structure is:
+    // { "vulnerabilities": { "pkg-name": { "name": "...", "severity": "...", "via": [...] } }, "metadata": ... }
+    // Or sometimes just "advisories" map.
+    // For simplicity, let's try to extract from 'vulnerabilities' if it's a map of objects directly or use metadata.
+
+    // Let's rely on 'vulnerabilities' map for now.
+    // If we have detailed 'vulnerabilities', we iterate them.
+    if let Some(vulns) = parsed.vulnerabilities {
+       if let serde_json::Value::Object(map) = vulns {
+           for (name, val) in map {
+               // In npm 7+, 'val' has 'severity', 'via' (array/string), 'range' etc.
+               // We try to extract best effort info.
+               let severity = val.get("severity").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
+               
+               // Avoid listing packages with "info" severity or transitive internal nodes if possible, 
+               // but 'vulnerabilities' usually lists top-level or flattened meaningful ones.
+               if severity == "info" { continue; }
+
+               let range = val.get("range").and_then(|v| v.as_str()).unwrap_or("").to_string();
+               
+               // Title is tricky in new format, often inside 'via'.
+               let title = if let Some(via) = val.get("via") {
+                   if let Some(arr) = via.as_array() {
+                       if let Some(first) = arr.first() {
+                            if let Some(obj) = first.as_object() {
+                                obj.get("title").and_then(|t| t.as_str()).unwrap_or("Vulnerability").to_string()
+                            } else {
+                                "Direct/Transitive Vulnerability".to_string()
+                            }
+                       } else {
+                           "Vulnerability".to_string()
+                       }
+                   } else {
+                       "Vulnerability".to_string()
+                   }
+               } else {
+                   "Vulnerability".to_string()
+               };
+
+               vulnerable_packages.push(VulnerablePackage {
+                   name,
+                   severity,
+                   title,
+                   range,
+               });
+           }
+       }
+    }
+    // Fallback: if 'advisories' exists (older npm), parse it.
+    else if let Some(advisories) = parsed.advisories {
+        for (_, adv) in advisories {
+            vulnerable_packages.push(VulnerablePackage {
+                name: adv.module_name,
+                severity: adv.severity,
+                title: adv.title,
+                range: adv.vulnerable_versions,
+            });
+        }
+    }
+
+    Ok(AuditResult {
+        counts: parsed.metadata.vulnerabilities,
+        vulnerable_packages,
+    })
+}
+
 fn get_mock_packages() -> Vec<Package> {
+// ...
     vec![
         Package {
             name: "react".to_string(),

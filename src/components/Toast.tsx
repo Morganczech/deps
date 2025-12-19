@@ -6,9 +6,11 @@ interface ToastProps {
     type?: 'success' | 'error' | 'info';
     onClose: () => void;
     onShowOutput?: () => void;
+    onAction?: () => void;
+    actionLabel?: string;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type = 'success', onClose, onShowOutput }) => {
+export const Toast: React.FC<ToastProps> = ({ message, type = 'success', onClose, onShowOutput, onAction, actionLabel }) => {
     useEffect(() => {
         if (message && (type === 'success' || type === 'info')) {
             const timer = setTimeout(onClose, 3000);
@@ -26,6 +28,11 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'success', onClose
             <div className="toast-message">
                 <span className="toast-icon">{icon}</span>
                 <span className="toast-text">{message}</span>
+                {onAction && actionLabel && (
+                    <button className="toast-btn" onClick={onAction}>
+                        {actionLabel}
+                    </button>
+                )}
                 {type === 'error' && onShowOutput && (
                     <button className="toast-btn" onClick={onShowOutput}>
                         Show output

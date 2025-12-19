@@ -11,6 +11,7 @@ import { ConfirmationModal } from "./components/ConfirmationModal";
 import { VersionInputModal } from "./components/VersionInputModal";
 import { Toast } from "./components/Toast";
 import { EmptyWorkspace } from "./components/EmptyWorkspace";
+import { AuditModal } from "./components/AuditModal";
 import { api } from "./lib/api";
 import { texts } from "./i18n/texts";
 import "./App.css";
@@ -29,6 +30,26 @@ function App() {
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const [lastUpdatedPackage, setLastUpdatedPackage] = useState<string | null>(null);
+
+    // Audit State
+    const [isAuditOpen, setIsAuditOpen] = useState(false);
+    const [isAuditing, setIsAuditing] = useState(false);
+    const [auditResult, setAuditResult] = useState<{
+        counts: {
+            info: number;
+            low: number;
+            moderate: number;
+            high: number;
+            critical: number;
+            total: number;
+        };
+        vulnerable_packages: Array<{
+            name: string;
+            severity: string;
+            title: string;
+            range: string;
+        }>;
+    } | null>(null);
 
     // Search State
     const [searchQuery, setSearchQuery] = useState("");
@@ -138,6 +159,26 @@ function App() {
             console.error(e);
         } finally {
             setIsInstalling(false);
+        }
+    };
+
+    const handleRunAudit = async () => {
+        if (!activeProject) return;
+
+        setIsAuditOpen(true);
+        setIsAuditing(true);
+        setAuditResult(null);
+
+        try {
+            const result = await api.runAudit(activeProject.path);
+            setAuditResult(result);
+        } catch (e) {
+            console.error("Audit failed", e);
+            // Error handling handled by modal empty state or we can show toast
+            setToastType('error');
+            setToastMessage("Audit failed (check console)");
+        } finally {
+            setIsAuditing(false);
         }
     };
 
@@ -337,6 +378,15 @@ function App() {
                                         </button>
                                     </>
                                 )}
+                                {activeProject.has_node_modules && (
+                                    <button
+                                        className="btn-text btn-audit"
+                                        onClick={handleRunAudit}
+                                        title="Run Security Audit (npm audit)"
+                                    >
+                                        🛡️ Audit
+                                    </button>
+                                )}
                             </header>
                             <div className="content-split">
                                 <div className="filter-bar">
@@ -419,11 +469,23 @@ function App() {
                 onConfirm={handleVersionInputConfirm}
                 onCancel={() => setIsInputModalOpen(false)}
             />
+            <AuditModal
+                isOpen={isAuditOpen}
+                result={auditResult}
+                isLoading={isAuditing}
+                onClose={() => setIsAuditOpen(false)}
+            />
             <Toast
                 message={toastMessage}
                 type={toastType}
                 onClose={() => setToastMessage(null)}
                 onShowOutput={() => setShowTerminal(true)}
+                onAction={
+                    toastType === 'error' && toastMessage === "Update failed"
+                        ? handleConfirmUpdate
+                        : undefined
+                }
+                actionLabel="Retry"
             />
         </div>
     );

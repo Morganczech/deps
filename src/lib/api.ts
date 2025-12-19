@@ -34,23 +34,39 @@ export const api = {
         return await invoke<Project[]>("scan_projects", { rootPath });
     },
 
-    getPackages: async (projectPath: string): Promise<Package[]> => {
-        return await invoke<Package[]>("get_packages", { projectPath });
+    async getPackages(projectPath: string): Promise<Package[]> {
+        return invoke('get_packages', { projectPath });
     },
 
-    updatePackage: async (projectPath: string, packageName: string, version: string): Promise<void> => {
-        return await invoke<void>("update_package", { projectPath, packageName, version });
+    async updatePackage(projectPath: string, packageName: string, version: string): Promise<void> {
+        return invoke('update_package', { projectPath, packageName, version });
     },
 
-    installDependencies: async (projectPath: string): Promise<void> => {
-        return await invoke<void>("install_dependencies", { projectPath });
+    async installDependencies(projectPath: string): Promise<void> {
+        return invoke('install_dependencies', { projectPath });
     },
 
-    openUrl: async (url: string): Promise<void> => {
-        try {
-            await open(url);
-        } catch (e) {
-            console.error("Failed to open URL:", e);
-        }
+    async runAudit(projectPath: string): Promise<{
+        counts: {
+            info: number;
+            low: number;
+            moderate: number;
+            high: number;
+            critical: number;
+            total: number;
+        };
+        vulnerable_packages: Array<{
+            name: string;
+            severity: string;
+            title: string;
+            range: string;
+        }>;
+    }> {
+        return invoke('run_audit', { projectPath });
+    },
+
+    async openUrl(url: string): Promise<void> {
+        // Use the shell plugin for system browser
+        await open(url);
     }
 };
