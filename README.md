@@ -2,8 +2,7 @@
 
 **Deps** is a native Linux desktop application for managing Node.js dependencies effortlessly. Designed for developers who manage multiple projects and want a clear, unified view of their dependency health without context switching.
 
-![Deps Screenshot](https://raw.githubusercontent.com/tauri-apps/tauri/dev/.github/splash.png)
-*(Note: Replace with actual screenshot)*
+![Deps Screenshot](./assets/screenshot.png)
 
 ---
 
