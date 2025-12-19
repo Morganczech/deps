@@ -10,7 +10,7 @@ interface TerminalProps {
 
 export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onClose, onToggle }) => {
     const [height, setHeight] = useState(120); // Výchozí nízká výška
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true); // Defaultně sbalený
     const [isResizing, setIsResizing] = useState(false);
     const terminalRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +74,7 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onClose, 
             />
             <div className="terminal-header">
                 <div className="terminal-title">
+                    <span className="terminal-prompt">_&lt;</span>
                     <button
                         className="toggle-btn"
                         onClick={handleToggle}

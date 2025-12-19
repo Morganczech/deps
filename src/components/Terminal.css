@@ -50,6 +50,13 @@
     gap: 8px;
 }
 
+.terminal-prompt {
+    color: var(--color-primary);
+    font-weight: 600;
+    font-family: monospace;
+    font-size: 1rem;
+}
+
 .toggle-btn {
     background: none;
     border: none;

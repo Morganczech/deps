@@ -95,3 +95,115 @@ button.btn-locked {
     background-color: #444 !important;
     color: #aeaeae !important;
 }
+
+/* Loading State */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 40px 20px;
+    gap: 16px;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #333;
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #888;
+    font-weight: 400;
+}
+
+/* Error State */
+.error-state {
+    display: flex;
+    flex-direction: column;
+    padding: 40px 20px;
+    gap: 16px;
+}
+
+.error-state h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #f66151;
+    font-weight: 600;
+}
+
+.error-message {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #ccc;
+    font-family: monospace;
+    background-color: #2a1a1a;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #f66151;
+}
+
+.error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.error-actions .hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #ccc;
+    border: 1px solid #555;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    align-self: flex-start;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #777;
+}
+
+/* Empty Project State */
+.empty-project-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.empty-content {
+    text-align: center;
+    max-width: 400px;
+}
+
+.empty-content h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    color: #888;
+    font-weight: 500;
+}
+
+.empty-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.5;
+}
+

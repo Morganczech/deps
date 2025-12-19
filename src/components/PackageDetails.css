@@ -4,6 +4,7 @@
     background-color: #1e1e1e;
     border-left: 1px solid #333;
     padding: 24px;
+    padding-bottom: 200px; /* Extra místo pro terminál */
     display: flex;
     flex-direction: column;
     gap: 24px;
