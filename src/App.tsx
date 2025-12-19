@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { listen } from '@tauri-apps/api/event';
 
-// We don't expose fetchPackages directly anymore...
 import { Sidebar } from "./components/Sidebar";
 import { Project, Package } from "./types";
 import { Terminal } from "./components/Terminal";
@@ -13,7 +13,6 @@ import { Toast } from "./components/Toast";
 import { EmptyWorkspace } from "./components/EmptyWorkspace";
 import { AuditModal } from "./components/AuditModal";
 import { api } from "./lib/api";
-import { texts } from "./i18n/texts";
 import "./App.css";
 
 function App() {
@@ -250,6 +249,7 @@ function App() {
     // Instead we rely on the useEffect below reacting to activeProject changes.
 
     // Unified fetch logic with cancellation via useEffect
+    const { t } = useTranslation();
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Track previous packages for detection
@@ -384,7 +384,7 @@ function App() {
 
         // Downgrade Check
         if (packageToUpdate && compareVersions(version, packageToUpdate.current_version) < 0) {
-            setCustomWarning(texts.states.downgradeWarning);
+            setCustomWarning(t('project.downgradeWarning'));
         } else {
             setCustomWarning(null);
         }
@@ -513,27 +513,27 @@ function App() {
                                 <h2>{activeProject.name}</h2>
                                 <span className="project-version">v{activeProject.version}</span>
                                 {!activeProject.is_writable && (
-                                    <span className="badge-readonly" title={texts.app.readOnlyTooltip}>
-                                        {texts.app.readOnly}
+                                    <span className="badge-readonly" title={t('project.readOnly')}>
+                                        {t('project.readOnly')}
                                     </span>
                                 )}
                                 {!activeProject.has_node_modules && (
                                     <>
                                         <span className="dependency-warning" title="node_modules folder not found">
-                                            ⚠ Dependencies not installed
+                                            ⚠ {t('project.dependenciesNotInstalled')}
                                         </span>
                                         <button
                                             className="btn-primary btn-install"
                                             onClick={handleInstallDependencies}
                                             disabled={!activeProject.is_writable || isInstalling}
-                                            title={!activeProject.is_writable ? "Project is read-only. Cannot install dependencies." : "Runs npm install in the project directory"}
+                                            title={!activeProject.is_writable ? t('project.readOnly') : "Runs npm install in the project directory"}
                                         >
                                             {isInstalling ? (
                                                 <>
                                                     <span className="spinner-small"></span>
-                                                    Installing dependencies...
+                                                    {t('project.installing')}
                                                 </>
-                                            ) : "Install dependencies"}
+                                            ) : t('project.installDependencies')}
                                         </button>
                                     </>
                                 )}
@@ -541,9 +541,9 @@ function App() {
                                     <button
                                         className="btn-text btn-audit"
                                         onClick={handleRunAudit}
-                                        title="Run Security Audit (npm audit)"
+                                        title={t('app.audit')}
                                     >
-                                        🛡️ Audit
+                                        🛡️ {t('app.audit')}
                                     </button>
                                 )}
                             </header>
@@ -552,7 +552,7 @@ function App() {
                                     <input
                                         type="text"
                                         className="search-input"
-                                        placeholder={texts.app.searchPlaceholder}
+                                        placeholder={t('app.searchPlaceholder')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         autoFocus
@@ -561,21 +561,21 @@ function App() {
                                 {isLoading ? (
                                     <div className="loading-state">
                                         <div className="spinner"></div>
-                                        <p>{texts.states.loading}</p>
+                                        <p>{t('app.loading')}</p>
                                     </div>
                                 ) : error ? (
                                     <div className="error-state">
-                                        <h3>{texts.states.errorHeader}</h3>
+                                        <h3>{t('app.errorHeader')}</h3>
                                         <p className="error-message">{error}</p>
                                         <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
-                                            {texts.app.retry}
+                                            {t('app.retry')}
                                         </button>
                                     </div>
                                 ) : packages.length === 0 ? (
                                     <div className="empty-project-state">
                                         <div className="empty-content">
-                                            <h3>{texts.states.noDependenciesHeader}</h3>
-                                            <p>{texts.states.noDependenciesMessage}</p>
+                                            <h3>{t('project.noDependenciesHeader')}</h3>
+                                            <p>{t('project.noDependenciesMessage')}</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -595,7 +595,7 @@ function App() {
                                             onUpdate={handleUpdateClick}
                                             onInstallSpecific={handleInstallSpecific}
                                             onRollback={handleRollback}
-                                            onReadOnlyWarning={() => setToastMessage(texts.app.readOnlyTooltip)}
+                                            onReadOnlyWarning={() => setToastMessage(t('project.readOnly'))}
                                         />
                                     </div>
                                 )}

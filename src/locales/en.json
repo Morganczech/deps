@@ -1,0 +1,75 @@
+{
+    "app": {
+        "title": "Dependencies",
+        "openFolder": "Open Folder",
+        "searchPlaceholder": "Search packages...",
+        "audit": "Audit",
+        "auditFix": "Fix Vulnerabilities",
+        "loading": "Scanning dependencies...",
+        "errorHeader": "⚠️ Error Loading Project",
+        "retry": "Retry",
+        "welcome": "Welcome to Deps",
+        "openFolderSort": "Open a folder containing Node.js projects to get started.",
+        "selectFolder": "Select Folder"
+    },
+    "project": {
+        "installDependencies": "Install dependencies",
+        "installing": "Installing dependencies...",
+        "dependenciesNotInstalled": "Dependencies are not installed",
+        "readOnly": "Read-only",
+        "noDependenciesHeader": "No Dependencies",
+        "noDependenciesMessage": "This project has no packages listed in package.json.",
+        "downgradeWarning": "⚠️ You are about to downgrade this package. This is risky."
+    },
+    "package": {
+        "updateTo": "Update to {{version}}",
+        "installSpecific": "Install specific version...",
+        "rollback": "Rollback",
+        "history": "History",
+        "addNote": "+ Add note",
+        "editNote": "✎",
+        "notePlaceholder": "Add a note... (Enter to save)",
+        "externalChange": "External Change",
+        "upToDate": "Up to date",
+        "loading": "Loading history...",
+        "empty": "No history recorded",
+        "loadError": "Failed to load history",
+        "saveNoteError": "Failed to save note",
+        "rollbackTo": "Rollback to {{version}}"
+    },
+    "status": {
+        "major": "Major",
+        "minor": "Minor",
+        "upToDate": "Up to date",
+        "notInstalled": "Not Installed"
+    },
+    "table": {
+        "package": "PACKAGE",
+        "current": "CURRENT",
+        "wanted": "WANTED",
+        "latest": "LATEST",
+        "status": "STATUS"
+    },
+    "sidebar": {
+        "projects": "PROJECTS",
+        "expand": "Expand Sidebar",
+        "collapse": "Collapse Sidebar"
+    },
+    "details": {
+        "empty": "Select a package to view details",
+        "majorWarning": "⚠️ Major update available. Potential breaking changes.",
+        "forceUpdate": "Force update to",
+        "links": {
+            "github": "GitHub",
+            "homepage": "Homepage",
+            "npm": "npm"
+        }
+    },
+    "modal": {
+        "confirmTitle": "Confirm Update",
+        "confirmMessage": "Are you sure you want to update <strong>{{name}}</strong>?",
+        "confirmCheckbox": "I understand the risk.",
+        "cancel": "Cancel",
+        "update": "Update"
+    }
+}

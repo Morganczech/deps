@@ -1,6 +1,6 @@
 import React from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Package } from '../types';
-import { texts } from '../i18n/texts';
 import './ConfirmationModal.css';
 
 interface ConfirmationModalProps {
@@ -20,6 +20,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     onConfirm,
     onCancel
 }) => {
+    const { t } = useTranslation();
     const [isConfirmed, setIsConfirmed] = React.useState(false);
 
     // Reset state when modal opens
@@ -36,10 +37,12 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h3 className="modal-title">Confirm Update</h3>
+                <h3 className="modal-title">{t('modal.confirmTitle')}</h3>
                 <div className="modal-body">
                     <p>
-                        Are you sure you want to update <strong>{packageToUpdate.name}</strong>?
+                        <Trans i18nKey="modal.confirmMessage" values={{ name: packageToUpdate.name, defaultValue: "Are you sure you want to update <strong>{{name}}</strong>?" }} components={{ strong: <strong /> }}>
+                            Are you sure you want to update <strong>{packageToUpdate.name}</strong>?
+                        </Trans>
                     </p>
                     <div className="version-diff">
                         <span className="version-old">{packageToUpdate.current_version}</span>
@@ -48,26 +51,26 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     </div>
                     {showWarning && (
                         <div className="modal-warning">
-                            <p>{customWarning || texts.details.majorWarning}</p>
+                            <p>{customWarning || t('details.majorWarning')}</p>
                             <label className="confirmation-checkbox">
                                 <input
                                     type="checkbox"
                                     checked={isConfirmed}
                                     onChange={(e) => setIsConfirmed(e.target.checked)}
                                 />
-                                I understand the risk.
+                                {t('modal.confirmCheckbox')}
                             </label>
                         </div>
                     )}
                 </div>
                 <div className="modal-actions">
-                    <button className="btn-secondary" onClick={onCancel}>Cancel</button>
+                    <button className="btn-secondary" onClick={onCancel}>{t('modal.cancel')}</button>
                     <button
                         className="btn-primary"
                         onClick={onConfirm}
                         disabled={!canConfirm}
                     >
-                        Update
+                        {t('modal.update')}
                     </button>
                 </div>
             </div>

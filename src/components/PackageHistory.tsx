@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PackageHistoryEntry } from '../types';
 import { api } from '../lib/api';
 import './PackageHistory.css';
@@ -16,6 +17,7 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
     onRollback,
     lastUpdated
 }) => {
+    const { t } = useTranslation();
     const [history, setHistory] = useState<PackageHistoryEntry[]>([]);
     const [loading, setLoading] = useState(false);
     const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
@@ -54,7 +56,7 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
             setEditingNoteIndex(null);
         } catch (e) {
             console.error("Failed to save note", e);
-            alert("Failed to save note");
+            alert(t('package.saveNoteError'));
         }
     };
 
@@ -67,12 +69,12 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
         }
     };
 
-    if (loading) return <div className="history-loading">Loading history...</div>;
-    if (history.length === 0) return <div className="history-empty">No history recorded</div>;
+    if (loading) return <div className="history-loading">{t('package.loading')}</div>;
+    if (history.length === 0) return <div className="history-empty">{t('package.empty')}</div>;
 
     return (
         <div className="package-history">
-            <h4>History</h4>
+            <h4>{t('package.history')}</h4>
             <div className="history-list">
                 {history.map((entry, i) => (
                     <div key={i} className={`history-item ${entry.type}`}>
@@ -80,7 +82,7 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
                             <span className={`history-type-icon ${entry.type}`}>
                                 {entry.type === 'upgrade' ? '↑' : entry.type === 'downgrade' ? '↓' : entry.type === 'rollback' ? '↺' : '⚡'}
                             </span>
-                            <span className="history-type">{entry.type === 'external' ? 'External Change' : entry.type}</span>
+                            <span className="history-type">{entry.type === 'external' ? t('package.externalChange') : entry.type}</span>
                             <span className="history-versions">
                                 {entry.from} → {entry.to}
                             </span>
@@ -95,7 +97,7 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
                                         type="text"
                                         value={noteDraft}
                                         onChange={(e) => setNoteDraft(e.target.value)}
-                                        placeholder="Add a note... (Enter to save)"
+                                        placeholder={t('package.notePlaceholder')}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') handleSaveNote(i);
                                             if (e.key === 'Escape') setEditingNoteIndex(null);
@@ -119,7 +121,7 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
                                                 setNoteDraft(entry.note || "");
                                             }}
                                         >
-                                            {entry.note ? "✎" : "+ Add note"}
+                                            {entry.note ? t('package.editNote') : t('package.addNote')}
                                         </button>
                                     )}
                                 </div>
@@ -129,9 +131,9 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
                             <button
                                 className="btn-rollback"
                                 onClick={() => onRollback(entry.from)}
-                                title={`Rollback to ${entry.from}`}
+                                title={t('package.rollbackTo', { version: entry.from })}
                             >
-                                Rollback
+                                {t('package.rollback')}
                             </button>
                         )}
                         {/* Allow immediate rollback even if it is latest? typically not needed unless it was a mistake */}

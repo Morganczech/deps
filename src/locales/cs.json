@@ -1,0 +1,75 @@
+{
+    "app": {
+        "title": "Závislosti",
+        "openFolder": "Otevřít složku",
+        "searchPlaceholder": "Hledat balíčky...",
+        "audit": "Audit",
+        "auditFix": "Opravit zranitelnosti",
+        "loading": "Načítám závislosti...",
+        "errorHeader": "⚠️ Chyba při načítání projektu",
+        "retry": "Zkusit znovu",
+        "welcome": "Vítejte v Deps",
+        "openFolderSort": "Otevřete složku s Node.js projekty.",
+        "selectFolder": "Vybrat složku"
+    },
+    "project": {
+        "installDependencies": "Nainstalovat závislosti",
+        "installing": "Instaluji závislosti...",
+        "dependenciesNotInstalled": "Závislosti nejsou nainstalovány",
+        "readOnly": "Pouze pro čtení",
+        "noDependenciesHeader": "Žádné závislosti",
+        "noDependenciesMessage": "Tento projekt nemá žádné balíčky v package.json.",
+        "downgradeWarning": "⚠️ Chystáte se ponížit verzi balíčku. To může být riskantní."
+    },
+    "package": {
+        "updateTo": "Aktualizovat na {{version}}",
+        "installSpecific": "Nainstalovat konkrétní verzi...",
+        "rollback": "Vrátit zpět",
+        "history": "Historie",
+        "addNote": "+ Přidat poznámku",
+        "editNote": "✎",
+        "notePlaceholder": "Sem napište poznámku... (Enter pro uložení)",
+        "externalChange": "Externí změna",
+        "upToDate": "Aktuální",
+        "loading": "Načítám historii...",
+        "empty": "Historie prázdná",
+        "loadError": "Nepodařilo se načíst historii",
+        "saveNoteError": "Nepodařilo se uložit poznámku",
+        "rollbackTo": "Vrátit zpět na {{version}}"
+    },
+    "status": {
+        "major": "Major",
+        "minor": "Minor",
+        "upToDate": "Aktuální",
+        "notInstalled": "Nenainstalováno"
+    },
+    "table": {
+        "package": "BALÍČEK",
+        "current": "AKTUÁLNÍ",
+        "wanted": "CÍLOVÁ",
+        "latest": "POSLEDNÍ",
+        "status": "STAV"
+    },
+    "sidebar": {
+        "projects": "PROJEKTY",
+        "expand": "Rozbalit panel",
+        "collapse": "Sbalit panel"
+    },
+    "details": {
+        "empty": "Vyberte balíček pro zobrazení detailů",
+        "majorWarning": "⚠️ Důležitá aktualizace. Možné změny v kompatibilitě.",
+        "forceUpdate": "Vynutit aktualizaci na",
+        "links": {
+            "github": "GitHub",
+            "homepage": "Domovská stránka",
+            "npm": "npm"
+        }
+    },
+    "modal": {
+        "confirmTitle": "Potvrdit aktualizaci",
+        "confirmMessage": "Opravdu chcete aktualizovat <strong>{{name}}</strong>?",
+        "confirmCheckbox": "Rozumím riziku.",
+        "cancel": "Zrušit",
+        "update": "Aktualizovat"
+    }
+}

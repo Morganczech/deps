@@ -1,6 +1,7 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Project } from '../types';
-import { texts } from '../i18n/texts';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -16,6 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onSelectProject,
     onOpenFolder
 }) => {
+    const { t } = useTranslation();
     const [isCollapsed, setIsCollapsed] = React.useState(false);
 
     return (
@@ -25,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <button
                         className="btn-icon btn-toggle"
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                        title={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
                     >
                         {isCollapsed ? '»' : '«'}
                     </button>
@@ -33,15 +35,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                     onClick={onOpenFolder}
                     className="btn-icon btn-open-folder"
-                    title={texts.sidebar.openFolder}
+                    title={t('app.openFolder')}
                 >
                     <span className="icon">📂</span>
-                    {!isCollapsed && <span className="label">{texts.sidebar.openFolder}</span>}
+                    {!isCollapsed && <span className="label">{t('app.openFolder')}</span>}
                 </button>
             </div>
 
             <div className="sidebar-section">
-                {!isCollapsed && <h3>{texts.sidebar.projectsHeader}</h3>}
+                {!isCollapsed && <h3>{t('sidebar.projects')}</h3>}
                 <ul className="project-list">
                     {projects.map((p) => (
                         <li
@@ -60,6 +62,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         </li>
                     ))}
                 </ul>
+            </div>
+
+            <div className="sidebar-footer">
+                <LanguageSwitcher />
             </div>
         </aside>
     );

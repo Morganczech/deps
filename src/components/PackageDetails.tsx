@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Package } from '../types';
 import { api } from '../lib/api';
-import { texts } from '../i18n/texts';
+import { useTranslation } from 'react-i18next';
 import { PackageHistory } from './PackageHistory';
 import './PackageDetails.css';
 
@@ -28,6 +28,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
     onRollback,
     onReadOnlyWarning
 }) => {
+    const { t } = useTranslation();
     const [shakingPkg, setShakingPkg] = useState<string | null>(null);
 
     useEffect(() => {
@@ -40,7 +41,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
     if (!pkg) {
         return (
             <div className="details-panel empty">
-                <p>{texts.details.empty}</p>
+                <p>{t('details.empty')}</p>
             </div>
         );
     }
@@ -69,7 +70,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
 
             {pkg.update_status === 'Major' && (
                 <div className="alert-major">
-                    {texts.details.majorWarning}
+                    {t('details.majorWarning')}
                 </div>
             )}
 
@@ -80,7 +81,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                         onClick={() => handleAction(() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || ""))}
                         disabled={isUpdating}
                     >
-                        {texts.details.updateTo} {pkg.wanted_version || pkg.latest_version}
+                        {t('package.updateTo', { version: pkg.wanted_version || pkg.latest_version })}
                     </button>
                 )}
 
@@ -90,7 +91,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                         onClick={() => handleAction(() => onUpdate(pkg, pkg.latest_version || ""))}
                         disabled={isUpdating}
                     >
-                        {texts.details.forceUpdate} {pkg.latest_version} (Major)
+                        {t('details.forceUpdate')} {pkg.latest_version} ({t('status.major')})
                     </button>
                 )}
             </div>
@@ -101,19 +102,19 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                     onClick={() => handleAction(() => onInstallSpecific(pkg))}
                     disabled={isUpdating || pkg.update_status === 'NotInstalled'}
                 >
-                    {texts.details.installSpecific}
+                    {t('package.installSpecific')}
                 </button>
             </div>
 
             <div className="links-section">
-                <h4>Links</h4>
+                <h4>{t('details.links.title', { defaultValue: 'Links' })}</h4>
                 <div className="links-list">
                     <button
                         className="link-badge npm"
                         onClick={() => api.openUrl(`https://www.npmjs.com/package/${pkg.name}`)}
                         title="Open NPM Registry"
                     >
-                        NPM
+                        {t('details.links.npm')}
                     </button>
 
                     {pkg.repository ? (
@@ -122,7 +123,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                             onClick={() => api.openUrl(pkg.repository!)}
                             title={pkg.repository}
                         >
-                            {texts.details.links.github}
+                            {t('details.links.github')}
                         </button>
                     ) : (
                         <span className="no-info">No repository info</span>
@@ -134,7 +135,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                             onClick={() => api.openUrl(pkg.homepage!)}
                             title={pkg.homepage}
                         >
-                            {texts.details.links.homepage}
+                            {t('details.links.homepage')}
                         </button>
                     )}
                 </div>

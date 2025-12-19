@@ -1,5 +1,5 @@
 import { Package, UpdateStatus } from '../types';
-import { texts } from '../i18n/texts';
+import { useTranslation } from 'react-i18next';
 import { StatusHelp } from './StatusHelp';
 import './PackageTable.css';
 
@@ -11,13 +11,14 @@ interface PackageTableProps {
 }
 
 export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPackage, lastUpdatedPackage, onSelect }) => {
+    const { t } = useTranslation();
 
     const getStatusBadge = (status: UpdateStatus) => {
         switch (status) {
-            case 'Major': return <span className="badge badge-major">{texts.table.badges.major}</span>;
-            case 'Minor': return <span className="badge badge-minor">{texts.table.badges.minor}</span>;
-            case 'UpToDate': return <span className="badge badge-ok">{texts.table.badges.upToDate}</span>;
-            case 'NotInstalled': return <span className="badge badge-gray">Not Installed</span>;
+            case 'Major': return <span className="badge badge-major">{t('status.major')}</span>;
+            case 'Minor': return <span className="badge badge-minor">{t('status.minor')}</span>;
+            case 'UpToDate': return <span className="badge badge-ok">{t('status.upToDate')}</span>;
+            case 'NotInstalled': return <span className="badge badge-gray">{t('status.notInstalled')}</span>;
             default: return null;
         }
     };
@@ -27,12 +28,12 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
             <table className="package-table">
                 <thead>
                     <tr>
-                        <th>{texts.table.headers.package}</th>
-                        <th>{texts.table.headers.current}</th>
-                        <th>{texts.table.headers.wanted}</th>
-                        <th>{texts.table.headers.latest}</th>
+                        <th>{t('table.package')}</th>
+                        <th>{t('table.current')}</th>
+                        <th>{t('table.wanted')}</th>
+                        <th>{t('table.latest')}</th>
                         <th>
-                            {texts.table.headers.status}
+                            {t('table.status')}
                             <StatusHelp />
                         </th>
                     </tr>
