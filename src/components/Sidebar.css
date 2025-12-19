@@ -4,13 +4,30 @@
   border-right: 1px solid #333;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Was 100vh */
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 60px;
 }
 
 .sidebar-header {
   padding: 10px;
   border-bottom: 1px solid #333;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-controls {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sidebar.collapsed .sidebar-controls {
+    justify-content: center;
 }
 
 .sidebar-section {
@@ -18,6 +35,11 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  overflow-x: hidden; /* Hide horizontal scrollbar during transition */
+}
+
+.sidebar.collapsed .sidebar-section {
+    padding: 10px 5px;
 }
 
 .sidebar-section h3 {
@@ -26,6 +48,7 @@
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .project-list {
@@ -42,6 +65,12 @@
   border-radius: 6px;
   margin-bottom: 2px;
   color: #ccc;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .project-item {
+    justify-content: center;
+    padding: 8px 0;
 }
 
 .project-item:hover {
@@ -56,6 +85,11 @@
 .project-icon {
   margin-right: 10px;
   font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed .project-icon {
+    margin-right: 0;
 }
 
 .project-info {
@@ -85,7 +119,27 @@
     cursor: pointer;
     font-size: 0.9rem;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center content */
+    gap: 8px; /* Space between icon and text */
 }
+
 .btn-icon:hover {
     background: #444;
 }
+
+.btn-toggle {
+    width: auto;
+    padding: 4px 8px;
+    background: transparent;
+    color: #888;
+}
+.btn-toggle:hover {
+    background: #2a2a2a;
+    color: #fff;
+}
+.sidebar.collapsed .btn-open-folder {
+    padding: 8px;
+}
+
