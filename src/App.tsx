@@ -265,112 +265,114 @@ function App() {
 
     return (
         <div className="app-container">
-            <Sidebar
-                projects={projects}
-                activeProject={activeProject}
-                onSelectProject={handleProjectSelect}
-                onOpenFolder={handleOpenFolder}
-            />
-            <main className="main-content">
-                {!workspacePath ? (
-                    <EmptyWorkspace onSelectWorkspace={handleOpenFolder} />
-                ) : isScanning ? (
-                    <div className="loading-state">
-                        <div className="spinner"></div>
-                        <p>Scanning projects...</p>
-                    </div>
-                ) : projects.length === 0 ? (
-                    <div className="empty-project-state">
-                        <div className="empty-content">
-                            <h3>No Node.js Projects Found</h3>
-                            <p>No package.json files found in {workspacePath}</p>
-                            <button className="btn-secondary" onClick={handleOpenFolder}>
-                                Select Different Folder
-                            </button>
+            <div className="workspace-wrapper">
+                <Sidebar
+                    projects={projects}
+                    activeProject={activeProject}
+                    onSelectProject={handleProjectSelect}
+                    onOpenFolder={handleOpenFolder}
+                />
+                <main className="main-content">
+                    {!workspacePath ? (
+                        <EmptyWorkspace onSelectWorkspace={handleOpenFolder} />
+                    ) : isScanning ? (
+                        <div className="loading-state">
+                            <div className="spinner"></div>
+                            <p>Scanning projects...</p>
                         </div>
-                    </div>
-                ) : activeProject ? (
-                    <div className="project-view">
-                        <header className="project-header">
-                            <h2>{activeProject.name}</h2>
-                            <span className="project-version">v{activeProject.version}</span>
-                            {!activeProject.is_writable && (
-                                <span className="badge-readonly" title={texts.app.readOnlyTooltip}>
-                                    {texts.app.readOnly}
-                                </span>
-                            )}
-                            {!activeProject.has_node_modules && (
-                                <>
-                                    <span className="dependency-warning" title="node_modules folder not found">
-                                        ⚠ Dependencies not installed
+                    ) : projects.length === 0 ? (
+                        <div className="empty-project-state">
+                            <div className="empty-content">
+                                <h3>No Node.js Projects Found</h3>
+                                <p>No package.json files found in {workspacePath}</p>
+                                <button className="btn-secondary" onClick={handleOpenFolder}>
+                                    Select Different Folder
+                                </button>
+                            </div>
+                        </div>
+                    ) : activeProject ? (
+                        <div className="project-view">
+                            <header className="project-header">
+                                <h2>{activeProject.name}</h2>
+                                <span className="project-version">v{activeProject.version}</span>
+                                {!activeProject.is_writable && (
+                                    <span className="badge-readonly" title={texts.app.readOnlyTooltip}>
+                                        {texts.app.readOnly}
                                     </span>
-                                    <button
-                                        className="btn-primary btn-install"
-                                        onClick={handleInstallDependencies}
-                                        disabled={!activeProject.is_writable || isInstalling}
-                                        title={!activeProject.is_writable ? "Project is read-only. Cannot install dependencies." : "Runs npm install in the project directory"}
-                                    >
-                                        {isInstalling ? (
-                                            <>
-                                                <span className="spinner-small"></span>
-                                                Installing dependencies...
-                                            </>
-                                        ) : "Install dependencies"}
-                                    </button>
-                                </>
-                            )}
-                        </header>
-                        <div className="content-split">
-                            {isLoading ? (
-                                <div className="loading-state">
-                                    <div className="spinner"></div>
-                                    <p>{texts.states.loading}</p>
-                                </div>
-                            ) : error ? (
-                                <div className="error-state">
-                                    <h3>{texts.states.errorHeader}</h3>
-                                    <p className="error-message">{error}</p>
-                                    {error.includes("npm install") && (
-                                        <div className="error-actions">
-                                            <p className="hint">{texts.states.nodeModulesMissing}</p>
-                                            <button className="btn-primary" onClick={() => alert(texts.states.installHint)}>
-                                                {texts.states.installDependencies}
-                                            </button>
-                                        </div>
-                                    )}
-                                    <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
-                                        {texts.app.retry}
-                                    </button>
-                                </div>
-                            ) : packages.length === 0 ? (
-                                <div className="empty-project-state">
-                                    <div className="empty-content">
-                                        <h3>{texts.states.noDependenciesHeader}</h3>
-                                        <p>{texts.states.noDependenciesMessage}</p>
+                                )}
+                                {!activeProject.has_node_modules && (
+                                    <>
+                                        <span className="dependency-warning" title="node_modules folder not found">
+                                            ⚠ Dependencies not installed
+                                        </span>
+                                        <button
+                                            className="btn-primary btn-install"
+                                            onClick={handleInstallDependencies}
+                                            disabled={!activeProject.is_writable || isInstalling}
+                                            title={!activeProject.is_writable ? "Project is read-only. Cannot install dependencies." : "Runs npm install in the project directory"}
+                                        >
+                                            {isInstalling ? (
+                                                <>
+                                                    <span className="spinner-small"></span>
+                                                    Installing dependencies...
+                                                </>
+                                            ) : "Install dependencies"}
+                                        </button>
+                                    </>
+                                )}
+                            </header>
+                            <div className="content-split">
+                                {isLoading ? (
+                                    <div className="loading-state">
+                                        <div className="spinner"></div>
+                                        <p>{texts.states.loading}</p>
                                     </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <PackageTable
-                                        packages={packages}
-                                        selectedPackage={selectedPackage}
-                                        onSelect={setSelectedPackage}
-                                        lastUpdatedPackage={lastUpdatedPackage}
-                                    />
-                                    <PackageDetails
-                                        pkg={selectedPackage}
-                                        isUpdating={isUpdating}
-                                        isReadOnly={!activeProject.is_writable}
-                                        onUpdate={handleUpdateClick}
-                                        onInstallSpecific={handleInstallSpecific}
-                                        onReadOnlyWarning={() => setToastMessage(texts.app.readOnlyTooltip)}
-                                    />
-                                </>
-                            )}
+                                ) : error ? (
+                                    <div className="error-state">
+                                        <h3>{texts.states.errorHeader}</h3>
+                                        <p className="error-message">{error}</p>
+                                        {error.includes("npm install") && (
+                                            <div className="error-actions">
+                                                <p className="hint">{texts.states.nodeModulesMissing}</p>
+                                                <button className="btn-primary" onClick={() => alert(texts.states.installHint)}>
+                                                    {texts.states.installDependencies}
+                                                </button>
+                                            </div>
+                                        )}
+                                        <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
+                                            {texts.app.retry}
+                                        </button>
+                                    </div>
+                                ) : packages.length === 0 ? (
+                                    <div className="empty-project-state">
+                                        <div className="empty-content">
+                                            <h3>{texts.states.noDependenciesHeader}</h3>
+                                            <p>{texts.states.noDependenciesMessage}</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <PackageTable
+                                            packages={packages}
+                                            selectedPackage={selectedPackage}
+                                            onSelect={setSelectedPackage}
+                                            lastUpdatedPackage={lastUpdatedPackage}
+                                        />
+                                        <PackageDetails
+                                            pkg={selectedPackage}
+                                            isUpdating={isUpdating}
+                                            isReadOnly={!activeProject.is_writable}
+                                            onUpdate={handleUpdateClick}
+                                            onInstallSpecific={handleInstallSpecific}
+                                            onReadOnlyWarning={() => setToastMessage(texts.app.readOnlyTooltip)}
+                                        />
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ) : null}
-            </main>
+                    ) : null}
+                </main>
+            </div>
             <Terminal
                 isVisible={showTerminal}
                 output={terminalOutput}
