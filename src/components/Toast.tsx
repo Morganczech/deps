@@ -3,14 +3,14 @@ import './Toast.css';
 
 interface ToastProps {
     message: string | null;
-    type?: 'success' | 'error';
+    type?: 'success' | 'error' | 'info';
     onClose: () => void;
     onShowOutput?: () => void;
 }
 
 export const Toast: React.FC<ToastProps> = ({ message, type = 'success', onClose, onShowOutput }) => {
     useEffect(() => {
-        if (message && type === 'success') {
+        if (message && (type === 'success' || type === 'info')) {
             const timer = setTimeout(onClose, 3000);
             return () => clearTimeout(timer);
         }
@@ -19,7 +19,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'success', onClose
 
     if (!message) return null;
 
-    const icon = type === 'success' ? '✅' : '❌';
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
 
     return (
         <div className={`toast-container toast-${type}`}>

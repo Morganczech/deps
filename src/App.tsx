@@ -27,7 +27,7 @@ function App() {
     const [isInstalling, setIsInstalling] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [toastType, setToastType] = useState<'success' | 'error'>('success');
+    const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const [lastUpdatedPackage, setLastUpdatedPackage] = useState<string | null>(null);
 
     // Update Modal State
@@ -242,6 +242,10 @@ function App() {
         const timestamp = new Date().toLocaleTimeString();
         const cmd = `[${timestamp}] > npm install ${packageToUpdate.name}@${targetVersion}`;
         setTerminalOutput(prev => [...prev, cmd, `[${timestamp}] Starting update...`]);
+
+        // Immediate feedback
+        setToastType('info');
+        setToastMessage(`Updating ${packageToUpdate.name} to ${targetVersion}...`);
 
         try {
             await api.updatePackage(activeProject.path, packageToUpdate.name, targetVersion);
