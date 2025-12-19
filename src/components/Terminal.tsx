@@ -58,13 +58,13 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onToggle 
         onToggle();
     };
 
-    const displayHeight = isCollapsed ? 32 : height; // Pouze hlavička když collapsed
+
 
     return (
         <div
             ref={terminalRef}
             className="terminal-drawer"
-            style={{ height: `${displayHeight}px` }}
+            style={{ height: isCollapsed ? '32px' : `${height}px` }}
         >
             <div
                 className="resize-handle"

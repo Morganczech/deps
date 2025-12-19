@@ -1,10 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-shell";
 import { Project, Package } from "../types";
 
 export const api = {
     selectFolder: async (): Promise<string | null> => {
-        const result = await open({
+        const result = await openDialog({
             directory: true,
             multiple: false,
             title: "Select Workspace Folder"
@@ -46,6 +47,10 @@ export const api = {
     },
 
     openUrl: async (url: string): Promise<void> => {
-        window.open(url, '_blank');
+        try {
+            await open(url);
+        } catch (e) {
+            console.error("Failed to open URL:", e);
+        }
     }
 };
