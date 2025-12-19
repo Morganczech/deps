@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { listen } from '@tauri-apps/api/event';
 
 import { Sidebar } from "./components/Sidebar";
-import { Project, Package, UpdateStatus, GlobalSearchResult } from "./types";
+import { Project, Package, GlobalSearchResult } from "./types";
 import { Terminal } from "./components/Terminal";
 import { PackageTable } from "./components/PackageTable";
 import { PackageDetails } from "./components/PackageDetails";
@@ -16,8 +16,7 @@ import { GlobalSearchResults } from "./components/GlobalSearchResults";
 import { api } from "./lib/api";
 import "./App.css";
 
-// Global watcher unlisten function
-let unlistenFileChange: (() => void) | null = null;
+// Global watcher unlisten function (unused, removed)
 
 function App() {
     const { t } = useTranslation();
@@ -413,7 +412,6 @@ function App() {
                 try {
                     // Iterate all projects and fetch packages
                     // Note: This matches the plan but could be optimized with caching later
-                    const allResults: GlobalSearchResult[] = [];
                     const lowerQuery = searchQuery.toLowerCase();
 
                     // We run these in parallel-ish results
