@@ -70,7 +70,46 @@ button:hover {
     font-size: 0.8rem;
     margin-left: 10px;
     cursor: help;
+    font-weight: 500;
 }
+
+.dependency-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid #ffc107;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-install {
+    margin-left: 12px;
+    padding: 6px 16px !important;
+    font-size: 0.9rem !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-install:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spinner-small {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
 .project-view {
     display: flex;
     flex-direction: column;

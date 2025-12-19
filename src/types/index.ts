@@ -3,6 +3,7 @@ export interface Project {
     path: string;
     version: string;
     is_writable: boolean;
+    has_node_modules: boolean;
 }
 
 export type UpdateStatus = 'UpToDate' | 'Minor' | 'Major' | 'Error';

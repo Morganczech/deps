@@ -1,9 +1,10 @@
 use crate::models::{Package, UpdateStatus};
 use std::collections::HashMap;
-use std::process::Command;
+use tokio::process::Command; // Use tokio::process::Command
 use std::path::Path;
 use std::fs;
 use serde::Deserialize;
+use tokio::time::{timeout, Duration}; // Add timeout related imports
 
 const USE_MOCK: bool = false;
 
@@ -28,7 +29,7 @@ struct OutdatedInfo {
 }
 
 #[tauri::command]
-pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
+pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
     if USE_MOCK {
         return Ok(get_mock_packages());
     }
@@ -47,13 +48,24 @@ pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
     let pkg_json: PackageJson = serde_json::from_str(&pkg_json_content)
         .map_err(|e| format!("Failed to parse package.json: {}", e))?;
 
-    // 2. Run npm outdated --json
+    // 2. Run npm outdated --json with TIMEOUT
     // Exit code 0 = all good, 1 = outdated packages exist.
-    let output = Command::new("npm")
+    
+    let child = Command::new("npm")
         .args(["outdated", "--json"])
         .current_dir(&project_path)
-        .output()
-        .map_err(|e| format!("Failed to execute npm: {}", e))?;
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to spawn npm: {}", e))?;
+
+    let output_result = timeout(Duration::from_secs(15), child.wait_with_output()).await;
+
+    let output = match output_result {
+        Ok(Ok(o)) => o,
+        Ok(Err(e)) => return Err(format!("Failed to wait for npm output: {}", e)),
+        Err(_) => return Err("npm outdated timed out after 15 seconds".to_string()),
+    };
 
     let outdated_map: HashMap<String, OutdatedInfo> = if output.status.success() || output.status.code() == Some(1) {
         serde_json::from_slice(&output.stdout).unwrap_or_default()
@@ -145,7 +157,7 @@ pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
 }
 
 #[tauri::command]
-pub fn update_package(project_path: String, package_name: String, version: String) -> Result<(), String> {
+pub async fn update_package(project_path: String, package_name: String, version: String) -> Result<(), String> {
     if USE_MOCK {
         // Just return Ok for mock mode
         return Ok(());
@@ -167,6 +179,48 @@ pub fn update_package(project_path: String, package_name: String, version: Strin
         .args(["install", &format!("{}@{}", package_name, version)])
         .current_dir(&project_path)
         .output()
+        .await
+        .map_err(|e| format!("Failed to execute npm: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("npm install failed: {}", stderr));
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn install_dependencies(project_path: String) -> Result<(), String> {
+    if USE_MOCK {
+        return Ok(());
+    }
+
+    // Safety 1: Check if project path exists
+    let path = Path::new(&project_path);
+    if !path.exists() {
+        return Err("Project path does not exist".to_string());
+    }
+
+    // Safety 2: Check if package.json exists
+    let package_json_path = path.join("package.json");
+    if !package_json_path.exists() {
+        return Err("package.json not found in project".to_string());
+    }
+
+    // Safety 3: Check if directory is writable
+    if let Ok(metadata) = fs::metadata(&package_json_path) {
+        if metadata.permissions().readonly() {
+            return Err("Project is read-only. Cannot install dependencies.".to_string());
+        }
+    }
+
+    // Run npm install
+    let output = Command::new("npm")
+        .arg("install")
+        .current_dir(&project_path)
+        .output()
+        .await
         .map_err(|e| format!("Failed to execute npm: {}", e))?;
 
     if !output.status.success() {

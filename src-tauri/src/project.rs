@@ -90,11 +90,15 @@ fn parse_project(project_path: &PathBuf, package_json_path: &PathBuf) -> Option<
         .map(|m| m.permissions().readonly())
         .unwrap_or(true);
     
+    // Check if node_modules exists
+    let node_modules_path = project_path.join("node_modules");
+    let has_node_modules = node_modules_path.exists() && node_modules_path.is_dir();
+    
     Some(Project {
         name,
         path: project_path.to_string_lossy().to_string(),
         version,
         is_writable,
+        has_node_modules,
     })
 }
-

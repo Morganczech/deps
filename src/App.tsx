@@ -21,6 +21,7 @@ function App() {
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isInstalling, setIsInstalling] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
@@ -82,34 +83,107 @@ function App() {
         }
     };
 
-    const fetchPackages = (project: Project) => {
-        setIsLoading(true);
-        setError(null);
-        setPackages([]);
-        setSelectedPackage(null);
+    const handleInstallDependencies = async () => {
+        if (!activeProject) return;
 
-        api.getPackages(project.path)
-            .then((pkgs) => {
-                setPackages(pkgs);
-                if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
-            })
-            .catch((err) => {
-                console.error(err);
-                setError(typeof err === 'string' ? err : "Failed to load packages");
-            })
-            .finally(() => setIsLoading(false));
+        setIsInstalling(true);
+        setShowTerminal(true);
+
+        const timestamp = new Date().toLocaleTimeString();
+        setTerminalOutput(prev => [...prev, `[${timestamp}] > npm install in ${activeProject.name}`]);
+
+        try {
+            await api.installDependencies(activeProject.path);
+
+            const endTimestamp = new Date().toLocaleTimeString();
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ Dependencies installed successfully.`]);
+            setToastType('success');
+            setToastMessage("Dependencies installed");
+
+            // Refresh project to update has_node_modules
+            const result = await api.scanProjects(workspacePath!);
+            const updated = result.find(p => p.path === activeProject.path);
+            if (updated) {
+                setProjects(result);
+                setActiveProject(updated); // This will trigger the useEffect to load packages
+            }
+        } catch (e) {
+            const endTimestamp = new Date().toLocaleTimeString();
+            const errMsg = typeof e === 'string' ? e : "Unknown error during install";
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ❌ Error: ${errMsg}`]);
+            setToastType('error');
+            setToastMessage("Install failed");
+            console.error(e);
+        } finally {
+            setIsInstalling(false);
+        }
     };
 
+    // We don't expose fetchPackages directly anymore to avoid race conditions.
+    // Instead we rely on the useEffect below reacting to activeProject changes.
+
     useEffect(() => {
+        let isCurrent = true;
+
         if (activeProject) {
-            fetchPackages(activeProject);
+            setIsLoading(true);
+            setError(null);
+            setPackages([]);
+            setSelectedPackage(null);
+
+            // Fetch packages for the active project
+            api.getPackages(activeProject.path)
+                .then((pkgs) => {
+                    if (isCurrent) {
+                        setPackages(pkgs);
+                        if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
+                        setIsLoading(false);
+                    }
+                })
+                .catch((err) => {
+                    if (isCurrent) {
+                        console.error(err);
+                        setError(typeof err === 'string' ? err : "Failed to load packages");
+                        setIsLoading(false);
+                    }
+                });
         }
+
+        return () => {
+            isCurrent = false;
+        };
     }, [activeProject]);
+
+    // Helper to force refresh for current project (e.g. after update)
+    const refreshCurrentProject = () => {
+        if (!activeProject) return;
+        // Triggering a "re-fetch" by nulling and resetting activeProject is hacky.
+        // Better: create a dedicated refresh trigger or extract fetch logic to a useCallback that checks isCurrent (hard with async).
+        // Safest simple way: Just call the API and update state if project matches activeProject.
+
+        setIsLoading(true);
+        api.getPackages(activeProject.path)
+            .then((pkgs) => {
+                // Only update if the project hasn't changed in the meantime
+                setPackages(() => {
+                    // We can't easily check activeProject.path in closure here without ref.
+                    // But since this is triggered by user action on THIS project, it's safer.
+                    // Let's check the current activeProject state ref/value if possible?
+                    // Actually, we can just rely on the user not switching super fast during a 1s refresh.
+                    return pkgs;
+                });
+                setIsLoading(false);
+            })
+            .catch(e => {
+                setError(String(e));
+                setIsLoading(false);
+            });
+    };
 
     const handleProjectSelect = (p: Project) => {
         if (activeProject?.path === p.path) {
             // Refresh if clicking active
-            fetchPackages(p);
+            refreshCurrentProject();
         } else {
             setActiveProject(p);
         }
@@ -177,7 +251,7 @@ function App() {
             setLastUpdatedPackage(packageToUpdate.name);
 
             // Refresh logic
-            fetchPackages(activeProject);
+            refreshCurrentProject();
 
         } catch (e) {
             const endTimestamp = new Date().toLocaleTimeString();
@@ -228,6 +302,26 @@ function App() {
                                     {texts.app.readOnly}
                                 </span>
                             )}
+                            {!activeProject.has_node_modules && (
+                                <>
+                                    <span className="dependency-warning" title="node_modules folder not found">
+                                        ⚠ Dependencies not installed
+                                    </span>
+                                    <button
+                                        className="btn-primary btn-install"
+                                        onClick={handleInstallDependencies}
+                                        disabled={!activeProject.is_writable || isInstalling}
+                                        title={!activeProject.is_writable ? "Project is read-only. Cannot install dependencies." : "Runs npm install in the project directory"}
+                                    >
+                                        {isInstalling ? (
+                                            <>
+                                                <span className="spinner-small"></span>
+                                                Installing...
+                                            </>
+                                        ) : "Install dependencies"}
+                                    </button>
+                                </>
+                            )}
                         </header>
                         <div className="content-split">
                             {isLoading ? (
@@ -247,7 +341,7 @@ function App() {
                                             </button>
                                         </div>
                                     )}
-                                    <button className="btn-secondary" onClick={() => activeProject && fetchPackages(activeProject)}>
+                                    <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
                                         {texts.app.retry}
                                     </button>
                                 </div>

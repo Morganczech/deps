@@ -41,6 +41,10 @@ export const api = {
         return await invoke<void>("update_package", { projectPath, packageName, version });
     },
 
+    installDependencies: async (projectPath: string): Promise<void> => {
+        return await invoke<void>("install_dependencies", { projectPath });
+    },
+
     openUrl: async (url: string): Promise<void> => {
         window.open(url, '_blank');
     }

@@ -6,6 +6,7 @@ pub struct Project {
     pub path: String,
     pub version: String,
     pub is_writable: bool,
+    pub has_node_modules: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

@@ -15,11 +15,10 @@ fn main() {
             project::scan_projects,
             npm::get_packages,
             npm::update_package,
+            npm::install_dependencies,
             workspace::get_last_workspace,
             workspace::save_workspace,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-
