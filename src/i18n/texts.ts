@@ -8,6 +8,7 @@ export const texts = {
         retry: "Retry",
         readOnly: "Read-only",
         readOnlyTooltip: "This project is read-only. Updates are disabled.",
+        searchPlaceholder: "Search packages...",
     },
     sidebar: {
         openFolder: "Open Folder",

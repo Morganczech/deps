@@ -30,6 +30,13 @@ function App() {
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const [lastUpdatedPackage, setLastUpdatedPackage] = useState<string | null>(null);
 
+    // Search State
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredPackages = packages.filter(pkg =>
+        pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     // Update Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isInputModalOpen, setIsInputModalOpen] = useState(false);
@@ -150,6 +157,7 @@ function App() {
                 setIsLoading(true);
                 setError(null);
                 setPackages([]);
+                setSearchQuery(""); // Reset search on project switch
                 setSelectedPackage(null);
 
                 // Fetch packages for the active project
@@ -331,6 +339,16 @@ function App() {
                                 )}
                             </header>
                             <div className="content-split">
+                                <div className="filter-bar">
+                                    <input
+                                        type="text"
+                                        className="search-input"
+                                        placeholder={texts.app.searchPlaceholder}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
                                 {isLoading ? (
                                     <div className="loading-state">
                                         <div className="spinner"></div>
@@ -360,9 +378,9 @@ function App() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <>
+                                    <div className="main-split-view">
                                         <PackageTable
-                                            packages={packages}
+                                            packages={filteredPackages}
                                             selectedPackage={selectedPackage}
                                             onSelect={setSelectedPackage}
                                             lastUpdatedPackage={lastUpdatedPackage}
@@ -375,7 +393,7 @@ function App() {
                                             onInstallSpecific={handleInstallSpecific}
                                             onReadOnlyWarning={() => setToastMessage(texts.app.readOnlyTooltip)}
                                         />
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         </div>
