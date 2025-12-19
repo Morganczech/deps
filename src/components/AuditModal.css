@@ -194,6 +194,25 @@
     flex-shrink: 0;
 }
 
+.vuln-row.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.vuln-row.clickable:hover {
+    background-color: rgba(62, 144, 239, 0.1);
+}
+
+.pkg-type {
+    font-size: 1.1rem;
+    line-height: 1;
+    filter: grayscale(0.5);
+    margin-right: 5px;
+}
+.clickable .pkg-type {
+    filter: none;
+}
+
 .vuln-row .pkg-severity {
     font-size: 0.75rem;
     padding: 2px 6px;

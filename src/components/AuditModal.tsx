@@ -25,20 +25,28 @@ interface AuditModalProps {
     onClose: () => void;
     onFix?: () => void;
     isFixing?: boolean;
+    directDependencies?: Set<string>;
+    onSelectPackage?: (name: string) => void;
 }
 
-export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoading, onClose, onFix, isFixing }) => {
+export const AuditModal: React.FC<AuditModalProps> = ({
+    isOpen, result, isLoading, onClose, onFix, isFixing, directDependencies, onSelectPackage
+}) => {
     if (!isOpen) return null;
+
+    // ... (rest of component render)
 
     return (
         <div className="audit-modal-overlay" onClick={isFixing ? undefined : onClose}>
             <div className="audit-modal-content" onClick={e => e.stopPropagation()}>
+                {/* ... header ... */}
                 <div className="modal-header">
                     <h3>{isFixing ? "Fixing Vulnerabilities..." : "Security Audit"}</h3>
                     {!isFixing && <button className="close-btn" onClick={onClose}>×</button>}
                 </div>
 
                 <div className="modal-body">
+                    {/* ... loading states ... */}
                     {isLoading ? (
                         <div className="audit-loading">
                             <div className="spinner"></div>
@@ -56,6 +64,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                         </div>
                     ) : result ? (
                         <div className="audit-results">
+                            {/* ... summary ring ... */}
                             <div className="audit-summary-ring">
                                 <div className={`security-shield ${result.counts.total === 0 ? 'secure' : 'vulnerable'}`}>
                                     {result.counts.total === 0 ? '🛡️' : '⚠️'}
@@ -87,13 +96,26 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                                     <div className="affected-packages">
                                         <h5>Affected Packages ({result.vulnerable_packages.length})</h5>
                                         <ul className="vuln-list">
-                                            {result.vulnerable_packages.map((pkg, idx) => (
-                                                <li key={idx} className={`vuln-row ${pkg.severity}`}>
-                                                    <span className="pkg-name">{pkg.name}</span>
-                                                    <span className="pkg-severity">{pkg.severity}</span>
-                                                    <span className="pkg-title" title={pkg.title}>{pkg.title}</span>
-                                                </li>
-                                            ))}
+                                            {result.vulnerable_packages.map((pkg, idx) => {
+                                                const isDirect = directDependencies?.has(pkg.name);
+                                                const isClickable = isDirect && onSelectPackage;
+
+                                                return (
+                                                    <li
+                                                        key={idx}
+                                                        className={`vuln-row ${pkg.severity} ${isClickable ? 'clickable' : ''}`}
+                                                        onClick={() => isClickable && onSelectPackage && onSelectPackage(pkg.name)}
+                                                        title={isDirect ? "Click to view package details" : "Transitive dependency"}
+                                                    >
+                                                        <span className="pkg-type" title={isDirect ? "Direct Dependency" : "Transitive Dependency"}>
+                                                            {isDirect ? '📦' : '🔗'}
+                                                        </span>
+                                                        <span className="pkg-name">{pkg.name}</span>
+                                                        <span className="pkg-severity">{pkg.severity}</span>
+                                                        <span className="pkg-title" title={pkg.title}>{pkg.title}</span>
+                                                    </li>
+                                                );
+                                            })}
                                             {result.vulnerable_packages.length === 0 && (
                                                 <li className="vuln-row empty">Details not available in summary</li>
                                             )}
@@ -101,7 +123,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                                     </div>
                                 </>
                             )}
-
+                            {/* ... advice ... */}
                             <div className="audit-advice">
                                 <p>
                                     {result.counts.total === 0
@@ -117,6 +139,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                     )}
                 </div>
 
+                {/* ... actions ... */}
                 {!isLoading && !isFixing && (
                     <div className="modal-actions">
                         {result && result.counts.total > 0 && onFix && (

@@ -507,6 +507,14 @@ function App() {
                 onClose={() => setIsAuditOpen(false)}
                 onFix={handleAuditFix}
                 isFixing={isAuditFixing}
+                directDependencies={new Set(packages.map(p => p.name))}
+                onSelectPackage={(pkgName) => {
+                    setSearchQuery(pkgName); // Filter to find it easily
+                    // We can also try to select it directly if it exists in filtered list
+                    const found = packages.find(p => p.name === pkgName);
+                    if (found) setSelectedPackage(found);
+                    setIsAuditOpen(false);
+                }}
             />
             <Toast
                 message={toastMessage}

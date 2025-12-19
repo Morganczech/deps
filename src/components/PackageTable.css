@@ -22,6 +22,7 @@
     padding: 10px 15px;
     position: sticky;
     top: 0;
+    z-index: 10;
 }
 
 .package-table td {
