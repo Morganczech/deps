@@ -137,6 +137,9 @@ function App() {
     // We don't expose fetchPackages directly anymore to avoid race conditions.
     // Instead we rely on the useEffect below reacting to activeProject changes.
 
+    // Unified fetch logic with cancellation via useEffect
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
     useEffect(() => {
         let isCurrent = true;
 
@@ -167,32 +170,11 @@ function App() {
         return () => {
             isCurrent = false;
         };
-    }, [activeProject]);
+    }, [activeProject, refreshTrigger]);
 
-    // Helper to force refresh for current project (e.g. after update)
+    // Helper to force refresh for current project
     const refreshCurrentProject = () => {
-        if (!activeProject) return;
-        // Triggering a "re-fetch" by nulling and resetting activeProject is hacky.
-        // Better: create a dedicated refresh trigger or extract fetch logic to a useCallback that checks isCurrent (hard with async).
-        // Safest simple way: Just call the API and update state if project matches activeProject.
-
-        setIsLoading(true);
-        api.getPackages(activeProject.path)
-            .then((pkgs) => {
-                // Only update if the project hasn't changed in the meantime
-                setPackages(() => {
-                    // We can't easily check activeProject.path in closure here without ref.
-                    // But since this is triggered by user action on THIS project, it's safer.
-                    // Let's check the current activeProject state ref/value if possible?
-                    // Actually, we can just rely on the user not switching super fast during a 1s refresh.
-                    return pkgs;
-                });
-                setIsLoading(false);
-            })
-            .catch(e => {
-                setError(String(e));
-                setIsLoading(false);
-            });
+        setRefreshTrigger(t => t + 1);
     };
 
     const handleProjectSelect = (p: Project) => {

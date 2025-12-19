@@ -51,36 +51,11 @@ pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> 
     let pkg_json: PackageJson = serde_json::from_str(&pkg_json_content)
         .map_err(|e| format!("Failed to parse package.json: {}", e))?;
 
-    // Check if node_modules exists
+    // Check if node_modules exists (used for status determination mostly)
     let node_modules_exists = Path::new(&project_path).join("node_modules").exists();
 
-    if !node_modules_exists {
-         // Fallback: Return packages based on package.json only with NotInstalled status
-         let mut add_deps = |deps: Option<HashMap<String, String>>, is_dev: bool| {
-            if let Some(d) = deps {
-                for (name, version) in d {
-                    packages.push(Package {
-                        name,
-                        current_version: "".to_string(), // Unknown
-                        wanted_version: Some(version.clone()),
-                        latest_version: None,
-                        update_status: UpdateStatus::NotInstalled,
-                        is_dev,
-                        repository: None,
-                        homepage: None,
-                    });
-                }
-            }
-         };
-         add_deps(pkg_json.dependencies, false);
-         add_deps(pkg_json.dev_dependencies, true);
-         
-         packages.sort_by(|a, b| a.name.cmp(&b.name));
-         return Ok(packages);
-    }
-
     // 2. Run npm outdated --json with TIMEOUT
-    // Exit code 0 = all good, 1 = outdated packages exist.
+    // Note: npm outdated works even without node_modules, it just reports "MISSING" as current.
     
     let child = Command::new("npm")
         .args(["outdated", "--json"])
@@ -101,11 +76,13 @@ pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> 
     let outdated_map: HashMap<String, OutdatedInfo> = if output.status.success() || output.status.code() == Some(1) {
         serde_json::from_slice(&output.stdout).unwrap_or_default()
     } else {
-        // If exit code is not 0 or 1, it might be a real error 
+        // If exit code is not 0 or 1, and node_modules is missing, it might be that npm outdated failed for other reasons.
+        // But usually it works. If it fails, we fall back to empty map.
         let stderr = String::from_utf8_lossy(&output.stderr);
-        // Even if we checked node_modules before, it might have been deleted or corrupted.
-        // If we fall here, return error.
-        return Err(format!("npm exited with error: {}", stderr));
+        // Only error if we really can't proceed. If node_modules is missing, npm might complain differently depending on version.
+        // Let's log it but try to proceed with empty outdated info if it failed.
+        // Actually, for better UX, if it fails, we just don't have 'latest' info.
+        HashMap::new()
     };
 
     // 3. Merge
@@ -114,13 +91,21 @@ pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> 
             for (name, version_range) in d {
                 let outdated = outdated_map.get(&name);
                 
-                let current = outdated.and_then(|o| o.current.clone())
-                    .unwrap_or_else(|| version_range.clone()); 
+                // If node_modules is missing, current is implicitly empty/missing.
+                let current = if node_modules_exists {
+                    outdated.and_then(|o| o.current.clone())
+                        .unwrap_or_else(|| version_range.clone())
+                } else {
+                    "—".to_string() 
+                };
                 
                 let wanted = outdated.and_then(|o| o.wanted.clone());
                 let latest = outdated.and_then(|o| o.latest.clone());
                 
-                let status = if let Some(out) = outdated {
+                // Determine status
+                let status = if !node_modules_exists {
+                    UpdateStatus::NotInstalled
+                } else if let Some(out) = outdated {
                     if let (Some(w), Some(l)) = (&out.wanted, &out.latest) {
                         if w != l {
                             UpdateStatus::Major 
