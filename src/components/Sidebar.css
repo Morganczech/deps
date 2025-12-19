@@ -4,16 +4,20 @@
   border-right: 1px solid #333;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%; /* Was 100vh */
 }
 
 .sidebar-header {
   padding: 10px;
   border-bottom: 1px solid #333;
+  flex-shrink: 0;
 }
 
 .sidebar-section {
   padding: 10px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .sidebar-section h3 {
