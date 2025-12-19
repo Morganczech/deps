@@ -1,6 +1,7 @@
 .table-container {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     background-color: #242424;
 }
 
@@ -9,6 +10,7 @@
     border-collapse: collapse;
     font-size: 0.9rem;
     text-align: left;
+    table-layout: fixed;
 }
 
 .package-table th {
@@ -68,6 +70,8 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .badge-major {

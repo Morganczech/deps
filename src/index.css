@@ -7,6 +7,7 @@
   --color-text: rgba(255, 255, 255, 0.87);
   --color-primary: #3584e4; /* Adwaita Base Blue */
   --color-bg-secondary: #1e1e1e;
+  --color-focus: #3584e4; /* Adwaita Blue for focus */
   
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -28,3 +29,23 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* GNOME-style focus rings */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Disable default outline pro všechny elementy, použijeme jen focus-visible */
+*:focus {
+  outline: none;
+}
+
+/* Smooth scrolling */
+* {
+  scroll-behavior: smooth;
+}
+

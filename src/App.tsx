@@ -20,6 +20,7 @@ function App() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [lastUpdatedPackage, setLastUpdatedPackage] = useState<string | null>(null);
 
     // Update Modal State
@@ -137,6 +138,7 @@ function App() {
 
             const endTimestamp = new Date().toLocaleTimeString();
             setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ Update completed successfully.`]);
+            setToastType('success');
             setToastMessage("Update completed");
             setLastUpdatedPackage(packageToUpdate.name);
 
@@ -147,6 +149,9 @@ function App() {
             const endTimestamp = new Date().toLocaleTimeString();
             const errMsg = typeof e === 'string' ? e : "Unknown error during update";
             setTerminalOutput(prev => [...prev, `[${endTimestamp}] ❌ Error: ${errMsg}`]);
+            setToastType('error');
+            setToastMessage("Update failed");
+            setShowTerminal(true); // Automaticky otevře terminál při chybě
             console.error(e);
         } finally {
             setIsUpdating(false);
@@ -234,6 +239,7 @@ function App() {
                 isVisible={showTerminal}
                 output={terminalOutput}
                 onClose={() => setShowTerminal(false)}
+                onToggle={() => {/* Toggle handled internally in Terminal */ }}
             />
             <ConfirmationModal
                 isOpen={isModalOpen}
@@ -249,7 +255,12 @@ function App() {
                 onConfirm={handleVersionInputConfirm}
                 onCancel={() => setIsInputModalOpen(false)}
             />
-            <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+            <Toast
+                message={toastMessage}
+                type={toastType}
+                onClose={() => setToastMessage(null)}
+                onShowOutput={() => setShowTerminal(true)}
+            />
         </div>
     );
 }

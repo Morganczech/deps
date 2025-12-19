@@ -1,11 +1,14 @@
 .details-panel {
     width: 300px;
+    min-width: 300px;
     background-color: #1e1e1e;
     border-left: 1px solid #333;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .details-panel.empty {
@@ -50,6 +53,10 @@
     gap: 10px;
 }
 
+.details-actions button {
+    width: 100%; /* Všechna tlačítka stejně široká */
+}
+
 .btn-primary {
     background-color: var(--color-primary);
     color: white;
@@ -58,16 +65,54 @@
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.btn-primary:hover:not(:disabled):not(.btn-locked) {
+    background-color: #2a76d2;
 }
 
 .btn-warning {
     background-color: #e66100;
     color: white;
     border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.btn-warning:hover:not(:disabled):not(.btn-locked) {
+    background-color: #c75400;
+}
+
+.details-actions-secondary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.details-actions-secondary button {
+    width: 100%;
+}
+
+.btn-text {
+    background-color: transparent;
+    color: #62a0ea;
+    border: 1px solid #555;
     padding: 10px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.btn-text:hover:not(:disabled):not(.btn-locked) {
+    background-color: rgba(98, 160, 234, 0.1);
+    border-color: #62a0ea;
 }
 
 .links-section {
