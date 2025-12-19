@@ -28,7 +28,6 @@ struct OutdatedInfo {
 }
 
 #[tauri::command]
-#[tauri::command]
 pub fn get_packages(project_path: String) -> Result<Vec<Package>, String> {
     if USE_MOCK {
         return Ok(get_mock_packages());

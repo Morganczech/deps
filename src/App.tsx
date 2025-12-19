@@ -7,11 +7,14 @@ import { PackageDetails } from "./components/PackageDetails";
 import { ConfirmationModal } from "./components/ConfirmationModal";
 import { VersionInputModal } from "./components/VersionInputModal";
 import { Toast } from "./components/Toast";
+import { EmptyWorkspace } from "./components/EmptyWorkspace";
 import { api } from "./lib/api";
 import { texts } from "./i18n/texts";
 import "./App.css";
 
 function App() {
+    const [workspacePath, setWorkspacePath] = useState<string | null>(null);
+    const [isScanning, setIsScanning] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const [packages, setPackages] = useState<Package[]>([]);
@@ -34,17 +37,48 @@ function App() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [terminalOutput, setTerminalOutput] = useState<string[]>(["> Ready."]);
 
+    // Load last workspace on mount
+    useEffect(() => {
+        const loadWorkspace = async () => {
+            const lastPath = await api.getLastWorkspace();
+            if (lastPath) {
+                setWorkspacePath(lastPath);
+                await handleScanWorkspace(lastPath);
+            }
+        };
+        loadWorkspace();
+    }, []);
+
+    const handleScanWorkspace = async (path: string) => {
+        setIsScanning(true);
+        setProjects([]);
+        setActiveProject(null);
+        setError(null);
+
+        try {
+            const result = await api.scanProjects(path);
+            setProjects(result);
+            if (result.length > 0) setActiveProject(result[0]);
+        } catch (e) {
+            console.error("Failed to scan projects:", e);
+            setError(typeof e === 'string' ? e : "Failed to scan projects");
+        } finally {
+            setIsScanning(false);
+        }
+    };
+
     const handleOpenFolder = async () => {
         try {
             const selected = await api.selectFolder();
 
             if (selected) {
-                const result = await api.scanProjects(selected);
-                setProjects(result);
-                if (result.length > 0) setActiveProject(result[0]);
+                setWorkspacePath(selected);
+                await api.saveWorkspace(selected);
+                await handleScanWorkspace(selected);
             }
         } catch (e) {
             console.error("Failed to open folder", e);
+            setError(typeof e === 'string' ? e : "Failed to open folder");
         }
     };
 
@@ -167,7 +201,24 @@ function App() {
                 onOpenFolder={handleOpenFolder}
             />
             <main className="main-content">
-                {activeProject ? (
+                {!workspacePath ? (
+                    <EmptyWorkspace onSelectWorkspace={handleOpenFolder} />
+                ) : isScanning ? (
+                    <div className="loading-state">
+                        <div className="spinner"></div>
+                        <p>Scanning projects...</p>
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="empty-project-state">
+                        <div className="empty-content">
+                            <h3>No Node.js Projects Found</h3>
+                            <p>No package.json files found in {workspacePath}</p>
+                            <button className="btn-secondary" onClick={handleOpenFolder}>
+                                Select Different Folder
+                            </button>
+                        </div>
+                    </div>
+                ) : activeProject ? (
                     <div className="project-view">
                         <header className="project-header">
                             <h2>{activeProject.name}</h2>
@@ -227,13 +278,7 @@ function App() {
                             )}
                         </div>
                     </div>
-                ) : (
-                    <div className="empty-state">
-                        <h1>Welcome to Deps</h1>
-                        <p>Open a folder containing Node.js projects to get started.</p>
-                        <button onClick={handleOpenFolder}>Select Folder</button>
-                    </div>
-                )}
+                ) : null}
             </main>
             <Terminal
                 isVisible={showTerminal}
