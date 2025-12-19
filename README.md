@@ -1,181 +1,95 @@
 # Deps
 
-**Deps** is a native Linux desktop application for managing Node.js dependencies,
-designed specifically for developers using the GNOME desktop environment.
+**Deps** is a native Linux desktop application for managing Node.js dependencies effortlessly. Designed for developers who manage multiple projects and want a clear, unified view of their dependency health without context switching.
 
-Deps provides a clear, visual overview of project dependencies and updates,
-without forcing developers to constantly switch between terminals, editors,
-and browser tabs.
+![Deps Screenshot](https://raw.githubusercontent.com/tauri-apps/tauri/dev/.github/splash.png)
+*(Note: Replace with actual screenshot)*
 
 ---
 
-## 🎯 Intent & Philosophy
+## 🚀 Features
 
-Deps is built with a **Linux-first mindset**.
+### 📦 Dependency Management
+- **Visual Overview**: Instantly see `dependencies` and `devDependencies` for your project.
+- **Version Intelligence**:
+  - **Current**: What is installed.
+  - **Wanted**: What `package.json` allows.
+  - **Latest**: The newest version available on npm.
+- **Smart Updates**:
+  - 🟢 **Green**: Up-to-date.
+  - 🟠 **Orange**: Minor/Patch updates (safe).
+  - 🔴 **Red**: Major updates (breaking changes).
+- **One-Click Actions**: Update packages or install specific versions directly from the UI.
 
-It is not a web application wrapped in a window.
-It is a local, native tool that respects how Linux developers actually work.
+### 🔍 Global Search
+- **Cross-Project Search**: Search for a package (e.g., `react`) across **all** your loaded projects instantly.
+- **Scope Control**: Toggle between searching within the "This Project" or "All Projects".
+- **Deep Linking**: Click a result to jump directly to that project's context.
 
-### Core Principles
+### 🛡️ Security Audit
+- **Integrated npm audit**: Run security scans with one click.
+- **Vulnerability Reports**: View detailed vulnerability info (severity, path, advisory).
+- **Auto-Fix**: Run `npm audit fix` directly from the app to resolve common issues.
 
-- **Linux-Native**
-  - Designed to blend naturally into the GNOME desktop
-  - Uses native dialogs, system theming, and platform conventions
+### 📂 Workspaces & Navigation
+- **Sidebar Navigation**: Switch between multiple active projects quickly.
+- **Read-Only Protection**: Visual indicators and locked actions for projects where you don't have write permissions.
 
-- **Local & Private**
-  - No cloud services
-  - No user accounts
-  - No telemetry or tracking
-  - Everything runs locally on your machine
-
-- **User in Control**
-  - No automatic updates without confirmation
-  - Clear visibility into what will change and why
-
-- **MVP-Oriented**
-  - Focus on one job: dependency awareness and updates
-  - Avoid feature creep and unnecessary abstractions
+### 🌍 Localization
+- Fully localized interface (English / Czech).
 
 ---
 
-## 🚀 Features (MVP)
+## 🛠️ Installation
 
-The initial version of Deps focuses on a minimal, reliable feature set.
+### Linux
+Deps is distributed as **AppImage**, **DEB**, and **RPM**.
+Download the latest release from the [Releases Page](../../releases).
 
-### Project Discovery
-- Select a root directory containing Node.js projects
-- Automatically detects `package.json` files
-- Supports multiple projects within a single workspace
+**AppImage (Universal):**
+```bash
+chmod +x Deps-x.x.x.AppImage
+./Deps-x.x.x.AppImage
+```
 
-### Dependency Overview
-- Clear list of `dependencies` and `devDependencies`
-- Shows:
-  - current installed version
-  - wanted version (according to `package.json`)
-  - latest available version
-- Visual distinction between:
-  - up-to-date packages
-  - safe updates (patch / minor)
-  - potentially breaking updates (major)
+---
 
-### Update Checking
-- Uses the locally installed package manager:
-  - `npm` (initially)
-  - respects local `.npmrc` configuration
-- No external services or APIs
+## 💻 Development
 
-### Controlled Updates
-- One-click update to the **wanted** version
-- Explicit confirmation required for major upgrades
-- Live command output visible during operations
+Prerequisites:
+- **Rust** (stable)
+- **Node.js** (LTS) & **npm**
+- Linux development headers (webkit2gtk, etc.)
+
+### Setup
+```bash
+# Install dependencies
+npm install
+
+# Run in development mode (Tauri + Vite)
+npm run tauri dev
+```
+
+### Building
+To build a release package:
+```bash
+npm run tauri build
+```
+*Note: Building RPM/DEB requires `rpm-build` and `dpkg` installed on your system.*
 
 ---
 
 ## 🧱 Technology Stack
 
-Deps is designed around **native Linux integration**, not browser compatibility.
-
-### Desktop Runtime
-- **Tauri (preferred)** or other lightweight native runtime
-- Focus on:
-  - low memory usage
-  - fast startup
-  - native system behavior
-
-### UI Layer
-- Web-based UI rendered inside a native shell
-- Layout and spacing inspired by **GNOME Human Interface Guidelines**
-- Styling aligned with **libadwaita** principles:
-  - system colors
-  - adaptive light/dark mode
-  - minimal visual noise
-
-### Application Core (Native System Layer)
-- Local execution of system commands (`npm`)
-- Project scanning and package parsing
-- No background services or servers
-- Clear separation between:
-  - UI (presentation)
-  - application core (logic)
-  - system interaction (filesystem, processes)
-
-### Language Choices
-- **TypeScript** for UI and data modeling
-- **Rust** (or equivalent native layer) for system interaction
+- **Core**: [Tauri v2](https://v2.tauri.app/) (Rust)
+- **Frontend**: React + TypeScript + Vite
+- **Styling**: Native CSS (Dark Mode optimized)
+- **State Management**: React Hooks + Tauri Store
 
 ---
 
-## 🔒 Security & Trust Model
+## 🔒 Privacy & Philosophy
 
-Deps does not introduce new trust boundaries.
-
-- No API keys
-- No background services
-- No persistent network connections
-- All package resolution is delegated to the user's existing tooling
-
-Network access occurs only when:
-- the user explicitly checks for updates
-- the local package manager performs its standard operations
-
----
-
-## ❌ Non-Goals
-
-To keep Deps focused and maintainable, the following are explicitly out of scope:
-
-- Full IDE functionality
-- Automatic background updates
-- CI/CD integration
-- Cloud synchronization
-- Team or account-based features
-- Dependency resolution outside standard Node.js tooling
-
----
-
-## 📦 Project Status
-
-Deps is currently in the **planning and architecture phase**.
-
-The next milestone is a functional MVP that:
-- scans local projects
-- displays dependency status
-- safely performs user-initiated updates
-
----
-
-## 🐧 System Requirements (Linux)
-
-To build and run Deps on Linux, you need the following system development libraries installed.
-
-**Fedora:**
-```bash
-sudo dnf install webkit2gtk3-devel openssl-devel libappindicator-gtk3-devel librsvg2-devel
-```
-
-**Debian / Ubuntu:**
-```bash
-sudo apt-get install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
-```
-
-**Arch:**
-```bash
-sudo pacman -S webkit2gtk base-devel curl wget openssl appmenu-gtk-module gtk3 libappindicator-gtk3 librsvg
-```
-
-Without these libraries, the Tauri build will fail.
-
----
-
-## 🐧 Why Deps Exists
-
-Linux developers already have powerful tools.
-Deps exists to make dependency maintenance **clearer, calmer, and more intentional** —
-without sacrificing control or performance.
-
----
-
-## 🛠️ Developer Notes
-
-**Tauri & Vite Ports**
-Tauri Dev uses the same port as Vite (1420). If you change the port in `vite.config.ts`, you must also update `devPath` in `src-tauri/tauri.conf.json`.
+- **Local First**: No cloud accounts, no tracking. Everything runs on your machine.
+- **Native Performance**: Built with Rust for minimal resource usage compared to Electron.
+- **Transparent**: Executes standard `npm` commands under the hood. You remain in control.
