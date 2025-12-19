@@ -1,5 +1,6 @@
 import { Package, UpdateStatus } from '../types';
 import { texts } from '../i18n/texts';
+import { StatusHelp } from './StatusHelp';
 import './PackageTable.css';
 
 interface PackageTableProps {
@@ -29,7 +30,10 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
                         <th>{texts.table.headers.current}</th>
                         <th>{texts.table.headers.wanted}</th>
                         <th>{texts.table.headers.latest}</th>
-                        <th>{texts.table.headers.status}</th>
+                        <th>
+                            {texts.table.headers.status}
+                            <StatusHelp />
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
