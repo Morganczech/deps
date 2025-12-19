@@ -72,5 +72,13 @@ export const api = {
     async openUrl(url: string): Promise<void> {
         // Use the shell plugin for system browser
         await open(url);
+    },
+
+    async watchProject(path: string): Promise<void> {
+        return invoke('watch_project', { projectPath: path });
+    },
+
+    async unwatchProject(): Promise<void> {
+        return invoke('unwatch_project');
     }
 };

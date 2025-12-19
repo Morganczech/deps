@@ -92,6 +92,39 @@ function App() {
         };
     }, []);
 
+    // Watch project file changes
+    useEffect(() => {
+        let unlistenFileChange: Promise<() => void> | null = null;
+
+        const setupWatcher = async () => {
+            if (activeProject) {
+                try {
+                    await api.watchProject(activeProject.path);
+                    unlistenFileChange = listen('project-file-change', () => {
+                        // Debounce is good, but simple refresh is fine for now
+                        console.log("File changed, refreshing...");
+                        refreshCurrentProject();
+                        setToastMessage("Project updated externally");
+                        setToastType('info');
+                    });
+                } catch (e) {
+                    console.error("Failed to start watcher", e);
+                }
+            }
+        };
+
+        setupWatcher();
+
+        return () => {
+            if (activeProject) {
+                api.unwatchProject().catch(console.error);
+            }
+            if (unlistenFileChange) {
+                unlistenFileChange.then(f => f());
+            }
+        };
+    }, [activeProject?.path]);
+
     const handleScanWorkspace = async (path: string) => {
         setIsScanning(true);
         setProjects([]);
