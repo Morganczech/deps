@@ -17,6 +17,12 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onToggle 
     const MAX_HEIGHT_PERCENT = 0.6; // 60% výšky okna
 
     useEffect(() => {
+        if (isVisible) {
+            setIsCollapsed(false);
+        }
+    }, [isVisible]);
+
+    useEffect(() => {
         if (!isResizing) return;
 
         const handleMouseMove = (e: MouseEvent) => {
