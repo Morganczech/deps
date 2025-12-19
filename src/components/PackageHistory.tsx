@@ -39,52 +39,23 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
         }
     };
 
-    const handleSaveNote = async (index: number, entry: PackageHistoryEntry) => {
-        // Technically backend doesn't support updating specific entry easily without rewrite.
-        // But for "Add Note" flow right after upgrade, we usually want to update the last entry.
-        // Wait, the requirement says "append note" but backend is append-only log?
-        // Ah, user said "Inline 'Add note' (optional) ... ENTER = save".
-        // If we want to EDIT history, we need a backend command for it or overwrite entire history.
-        // Backend `save_package_history` appends.
-        // User spec: "History is read-only log, not editor" BUT "Inline 'Add note'".
-        // This implies we attach note to the JUST created entry.
+    const handleSaveNote = async (index: number) => {
+        if (index !== 0) return; // Only latest supported by backend for now
 
-        // Simpler approach for now: We assume we can't edit old entries, but UX asks for it.
-        // Re-reading spec: "History entry... note (optional)".
-        // Backend: `save_package_history` appends.
-        // To support "Add note" post-factum, we might need a `update_latest_history_note` or similar.
-        // OR we just re-save the whole list?
-        // Since we don't have update command, let's skip editing OLD notes for now.
-        // Wait, "Inline 'Add note' (volitelné) ... after success".
-        // So we are adding note to the LAST entry.
+        try {
+            await api.updateLastPackageHistoryNote(projectPath, packageName, noteDraft);
 
-        // Let's implement a frontend-side "update last entry" by re-writing history?
-        // No, that's heavy.
-        // Let's assume for this MVP we only allow adding note if we modify the `save_package_history` 
-        // to be smart? No, backend is append.
-
-        // Let's enable editing by overwriting. 
-        // But we lack `save_history_list` command.
-        // I'll stick to read-only for now unless I add a backend command.
-
-        // Actually, the prompt says "History is read-only log, ne editor".
-        // BUT also "Inline 'Add note'".
-        // This usually means "Right after I did the action, I can annotate it".
-        // This implies the entry is created *with* the note, OR we update it.
-        // If "Auto-save history on successful update" happens first (no note),
-        // then "Add note" must UPDATE that entry.
-
-        // I will just implement the view for now.
-        // The "Add Note" flow might need to happen in App.tsx BEFORE saving history?
-        // Or we save immediately, and "Add Note" updates it?
-        // User said: "1. metadata... 2. Inline Add note...".
-        // "Po úspěšném npm install... automaticky vytvořit history entry... NEPTAT SE NA POZNÁMKU".
-        // Then "zobrazit nenápadně [Add note]".
-        // This confirms we need to UPDATE the entry.
-
-        // I'll leave the "Add Note" complexity for the next step (backend update) if needed.
-        // For now, let's just display history.
-        console.warn("Editing note not yet fully supported backend-side without overwrite command");
+            // Optimistic update
+            const newHistory = [...history];
+            if (newHistory[0]) {
+                newHistory[0] = { ...newHistory[0], note: noteDraft };
+                setHistory(newHistory);
+            }
+            setEditingNoteIndex(null);
+        } catch (e) {
+            console.error("Failed to save note", e);
+            alert("Failed to save note");
+        }
     };
 
     const formatDate = (iso: string) => {
@@ -107,20 +78,54 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
                     <div key={i} className={`history-item ${entry.type}`}>
                         <div className="history-header">
                             <span className={`history-type-icon ${entry.type}`}>
-                                {entry.type === 'upgrade' ? '↑' : entry.type === 'downgrade' ? '↓' : '↺'}
+                                {entry.type === 'upgrade' ? '↑' : entry.type === 'downgrade' ? '↓' : entry.type === 'rollback' ? '↺' : '⚡'}
                             </span>
-                            <span className="history-type">{entry.type}</span>
+                            <span className="history-type">{entry.type === 'external' ? 'External Change' : entry.type}</span>
                             <span className="history-versions">
                                 {entry.from} → {entry.to}
                             </span>
                         </div>
                         <div className="history-meta">
                             <span className="history-date">{formatDate(entry.date)}</span>
-                            {entry.note ? (
-                                <div className="history-note">“{entry.note}”</div>
-                            ) : null}
+
+                            {/* Inline Note Editor for Latest Entry */}
+                            {i === 0 && editingNoteIndex === i ? (
+                                <div className="history-note-editor">
+                                    <input
+                                        type="text"
+                                        value={noteDraft}
+                                        onChange={(e) => setNoteDraft(e.target.value)}
+                                        placeholder="Add a note... (Enter to save)"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleSaveNote(i);
+                                            if (e.key === 'Escape') setEditingNoteIndex(null);
+                                        }}
+                                        autoFocus
+                                        maxLength={80}
+                                    />
+                                    <div className="note-actions">
+                                        <button className="btn-icon check" onClick={() => handleSaveNote(i)}>✓</button>
+                                        <button className="btn-icon cancel" onClick={() => setEditingNoteIndex(null)}>✕</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="history-note-display">
+                                    {entry.note && <div className="history-note">“{entry.note}”</div>}
+                                    {i === 0 && (
+                                        <button
+                                            className="btn-add-note"
+                                            onClick={() => {
+                                                setEditingNoteIndex(i);
+                                                setNoteDraft(entry.note || "");
+                                            }}
+                                        >
+                                            {entry.note ? "✎" : "+ Add note"}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                        {entry.type !== 'rollback' && (
+                        {entry.type !== 'rollback' && i !== 0 && (
                             <button
                                 className="btn-rollback"
                                 onClick={() => onRollback(entry.from)}
@@ -129,6 +134,7 @@ export const PackageHistory: React.FC<PackageHistoryProps> = ({
                                 Rollback
                             </button>
                         )}
+                        {/* Allow immediate rollback even if it is latest? typically not needed unless it was a mistake */}
                     </div>
                 ))}
             </div>

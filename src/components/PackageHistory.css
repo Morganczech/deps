@@ -29,6 +29,7 @@
 .history-item.upgrade { border-left-color: #4CAF50; }
 .history-item.downgrade { border-left-color: #FF9800; }
 .history-item.rollback { border-left-color: #2196F3; }
+.history-item.external { border-left-color: #E91E63; }
 
 .history-header {
     display: flex;
@@ -43,6 +44,7 @@
 .history-type-icon.upgrade { color: #4CAF50; }
 .history-type-icon.downgrade { color: #FF9800; }
 .history-type-icon.rollback { color: #2196F3; }
+.history-type-icon.external { color: #E91E63; }
 
 .history-type {
     font-size: 0.75rem;

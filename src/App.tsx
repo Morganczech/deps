@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { listen } from '@tauri-apps/api/event';
 
 // We don't expose fetchPackages directly anymore...
@@ -252,24 +252,65 @@ function App() {
     // Unified fetch logic with cancellation via useEffect
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+    // Track previous packages for detection
+    const previousPackagesRef = React.useRef<Package[]>([]);
+
     useEffect(() => {
         let isCurrent = true;
         let timer: ReturnType<typeof setTimeout>;
 
         if (activeProject) {
-            // Debounce to prevent double-firing in StrictMode and rapid clicks
+            // Debounce to prevent double-firing
             timer = setTimeout(() => {
                 setIsLoading(true);
                 setError(null);
-                setPackages([]);
-                setSearchQuery(""); // Reset search on project switch
-                setSelectedPackage(null);
+                setSearchQuery(""); // Reset search on project switch (optional, maybe keep it?)
+                // Actually, reseting search on refresh is annoying if filtering.
+                // Let's NOT reset search query here if we are just refreshing data.
+                // But this effect runs on activeProject change too.
+                // We can't distinguish easy.
 
-                // Fetch packages for the active project
+                // Let's allow search query persistence?
+                // The issue: "refreshCurrentProject" triggers this.
+                // If I switch project, activeProject changes.
+                // If I refresh, activeProject object reference might change if I update it? 
+                // refreshCurrentProject updates `refreshTrigger`.
+
+                // Let's reset search only if project path changed.
+                // But here we rely on activeProject dependency.
+
                 api.getPackages(activeProject.path)
-                    .then((pkgs) => {
+                    .then(async (pkgs) => {
                         if (isCurrent) {
+                            // DETECTION LOGIC
+                            // If we are NOT updating/installing via UI, check for changes
+                            if (!isUpdating && !isInstalling && previousPackagesRef.current.length > 0) {
+                                for (const newPkg of pkgs) {
+                                    const oldPkg = previousPackagesRef.current.find(p => p.name === newPkg.name);
+                                    if (oldPkg && oldPkg.current_version !== newPkg.current_version) {
+                                        // Version changed externally!
+                                        console.log(`Detected external change for ${newPkg.name}: ${oldPkg.current_version} -> ${newPkg.current_version}`);
+
+                                        // Save history
+                                        // We assume it is 'external' type
+                                        try {
+                                            await api.savePackageHistory(activeProject.path, newPkg.name, {
+                                                type: 'external',
+                                                from: oldPkg.current_version,
+                                                to: newPkg.current_version,
+                                                date: new Date().toISOString()
+                                            });
+                                            setLastHistoryUpdate(Date.now());
+                                        } catch (e) {
+                                            console.error("Failed to save external history", e);
+                                        }
+                                    }
+                                }
+                            }
+
+                            previousPackagesRef.current = pkgs;
                             setPackages(pkgs);
+
                             setSelectedPackage(prev => {
                                 if (prev) {
                                     const found = pkgs.find(p => p.name === prev.name);
@@ -603,7 +644,7 @@ function App() {
                 message={toastMessage}
                 type={toastType}
                 onClose={() => setToastMessage(null)}
-                onShowOutput={() => setShowTerminal(true)}
+                onShowOutput={!showTerminal ? () => setShowTerminal(true) : undefined}
                 onAction={
                     toastType === 'error' && toastMessage === "Update failed"
                         ? () => handleConfirmUpdate(false)

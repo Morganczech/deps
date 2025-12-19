@@ -20,7 +20,7 @@ export interface Package {
 }
 
 export interface PackageHistoryEntry {
-    type: 'upgrade' | 'downgrade' | 'rollback';
+    type: 'upgrade' | 'downgrade' | 'rollback' | 'external';
     from: string;
     to: string;
     date: string;
