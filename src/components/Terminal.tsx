@@ -4,11 +4,10 @@ import './Terminal.css';
 interface TerminalProps {
     output: string[];
     isVisible: boolean;
-    onClose: () => void;
     onToggle: () => void;
 }
 
-export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onClose, onToggle }) => {
+export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onToggle }) => {
     const [height, setHeight] = useState(120); // Výchozí nízká výška
     const [isCollapsed, setIsCollapsed] = useState(true); // Defaultně sbalený
     const [isResizing, setIsResizing] = useState(false);
@@ -74,18 +73,15 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onClose, 
             />
             <div className="terminal-header">
                 <div className="terminal-title">
-                    <span className="terminal-prompt">_&lt;</span>
+                    <span className="terminal-prompt">&gt;_</span>
                     <button
                         className="toggle-btn"
                         onClick={handleToggle}
-                        title={isCollapsed ? "Rozbalit terminál" : "Sbalit terminál"}
+                        title={isCollapsed ? "Expand terminal" : "Collapse terminal"}
                     >
                         {isCollapsed ? '▲' : '▼'}
                     </button>
-                    <span>VÝSTUP PŘÍKAZU (npm)</span>
-                </div>
-                <div className="terminal-controls">
-                    <button className="icon-btn" onClick={onClose} title="Zavřít terminál">×</button>
+                    <span>COMMAND OUTPUT (npm)</span>
                 </div>
             </div>
             {!isCollapsed && (

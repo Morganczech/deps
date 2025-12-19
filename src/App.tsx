@@ -238,7 +238,6 @@ function App() {
             <Terminal
                 isVisible={showTerminal}
                 output={terminalOutput}
-                onClose={() => setShowTerminal(false)}
                 onToggle={() => {/* Toggle handled internally in Terminal */ }}
             />
             <ConfirmationModal
