@@ -26,3 +26,8 @@ export interface PackageHistoryEntry {
     date: string;
     note?: string;
 }
+
+export interface GlobalSearchResult {
+    project: Project;
+    package: Package;
+}

@@ -10,7 +10,16 @@
         "retry": "Retry",
         "welcome": "Welcome to Deps",
         "openFolderSort": "Open a folder containing Node.js projects to get started.",
-        "selectFolder": "Select Folder"
+        "selectFolder": "Select Folder",
+        "searchScope": {
+            "current": "This Project",
+            "all": "All Projects"
+        },
+        "search": {
+            "searchingAll": "Searching all projects...",
+            "noGlobalResults": "No packages found in any project matching \"{{query}}\"",
+            "resultsCount": "Found {{count}} packages in {{projects}} projects"
+        }
     },
     "project": {
         "installDependencies": "Install dependencies",

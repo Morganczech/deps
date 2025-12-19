@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { listen } from '@tauri-apps/api/event';
 
 import { Sidebar } from "./components/Sidebar";
-import { Project, Package } from "./types";
+import { Project, Package, UpdateStatus, GlobalSearchResult } from "./types";
 import { Terminal } from "./components/Terminal";
 import { PackageTable } from "./components/PackageTable";
 import { PackageDetails } from "./components/PackageDetails";
@@ -12,20 +12,44 @@ import { VersionInputModal } from "./components/VersionInputModal";
 import { Toast } from "./components/Toast";
 import { EmptyWorkspace } from "./components/EmptyWorkspace";
 import { AuditModal } from "./components/AuditModal";
+import { GlobalSearchResults } from "./components/GlobalSearchResults";
 import { api } from "./lib/api";
 import "./App.css";
 
+// Global watcher unlisten function
+let unlistenFileChange: (() => void) | null = null;
+
 function App() {
+    const { t } = useTranslation();
     const [workspacePath, setWorkspacePath] = useState<string | null>(null);
-    const [isScanning, setIsScanning] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const [packages, setPackages] = useState<Package[]>([]);
+    const [filteredPackages, setFilteredPackages] = useState<Package[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Missing state restored
     const [isUpdating, setIsUpdating] = useState(false);
     const [isInstalling, setIsInstalling] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [isAuditFixing, setIsAuditFixing] = useState(false);
+    const [packageToUpdate, setPackageToUpdate] = useState<Package | null>(null);
+    const [targetVersion, setTargetVersion] = useState<string>("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+    const [customWarning, setCustomWarning] = useState<string | null>(null);
+    const [showTerminal, setShowTerminal] = useState(false);
+    const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
+    const [lastHistoryUpdate, setLastHistoryUpdate] = useState<number>(0);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // Global Search State
+    const [searchScope, setSearchScope] = useState<'current' | 'all'>('current');
+    const [globalResults, setGlobalResults] = useState<GlobalSearchResult[]>([]);
+    const [isGlobalSearching, setIsGlobalSearching] = useState(false);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
     const [lastUpdatedPackage, setLastUpdatedPackage] = useState<string | null>(null);
@@ -41,6 +65,7 @@ function App() {
             high: number;
             critical: number;
             total: number;
+            // fixed potential missing property from previous usage if any, but type seems correct from view_file
         };
         vulnerable_packages: Array<{
             name: string;
@@ -50,23 +75,24 @@ function App() {
         }>;
     } | null>(null);
 
-    // Search State
-    const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredPackages = packages.filter(pkg =>
-        pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Load packages function
+    const loadPackages = async (projectPath: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const pkgs = await api.getPackages(projectPath);
+            setPackages(pkgs);
+            // Default filtering to all
+            setFilteredPackages(pkgs);
+        } catch (e) {
+            console.error("Failed to load packages", e);
+            setError(typeof e === 'string' ? e : "Failed to load packages");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    // Update Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isInputModalOpen, setIsInputModalOpen] = useState(false);
-    const [packageToUpdate, setPackageToUpdate] = useState<Package | null>(null);
-    const [targetVersion, setTargetVersion] = useState("");
-    const [customWarning, setCustomWarning] = useState<string | null>(null);
-
-    const [showTerminal, setShowTerminal] = useState(true);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [terminalOutput, setTerminalOutput] = useState<string[]>(["> Ready."]);
 
     // Load last workspace on mount
     useEffect(() => {
@@ -214,7 +240,7 @@ function App() {
         }
     };
 
-    const [isAuditFixing, setIsAuditFixing] = useState(false);
+
 
     const handleAuditFix = async () => {
         if (!activeProject) return;
@@ -249,9 +275,6 @@ function App() {
     // Instead we rely on the useEffect below reacting to activeProject changes.
 
     // Unified fetch logic with cancellation via useEffect
-    const { t } = useTranslation();
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
     // Track previous packages for detection
     const previousPackagesRef = React.useRef<Package[]>([]);
 
@@ -351,6 +374,101 @@ function App() {
         }
     };
 
+    useEffect(() => {
+        if (!activeProject && projects.length > 0) {
+            // Only auto-select if we are not in global search mode navigating to a result
+            if (searchScope === 'current') {
+                setActiveProject(projects[0]);
+            }
+        }
+    }, [projects, activeProject, searchScope]);
+
+    useEffect(() => {
+        if (activeProject && searchScope === 'current') {
+            loadPackages(activeProject.path);
+        }
+    }, [activeProject, searchScope]);
+
+    // Search Logic (Local + Global)
+    useEffect(() => {
+        if (searchScope === 'current') {
+            // Local Filtering
+            if (!searchQuery.trim()) {
+                setFilteredPackages(packages);
+            } else {
+                const lower = searchQuery.toLowerCase();
+                setFilteredPackages(packages.filter(p => p.name.toLowerCase().includes(lower)));
+            }
+        } else {
+            // Global Search Debounce
+            const timer = setTimeout(async () => {
+                if (!searchQuery.trim()) {
+                    setGlobalResults([]);
+                    return;
+                }
+
+                setIsGlobalSearching(true);
+                setGlobalResults([]); // Clear previous
+
+                try {
+                    // Iterate all projects and fetch packages
+                    // Note: This matches the plan but could be optimized with caching later
+                    const allResults: GlobalSearchResult[] = [];
+                    const lowerQuery = searchQuery.toLowerCase();
+
+                    // We run these in parallel-ish results
+                    const promises = projects.map(async (proj) => {
+                        try {
+                            const projPkgs = await api.getPackages(proj.path);
+                            const matches = projPkgs.filter(p => p.name.toLowerCase().includes(lowerQuery));
+                            return matches.map(pkg => ({ project: proj, package: pkg }));
+                        } catch (e) {
+                            console.error(`Failed to search in ${proj.name}`, e);
+                            return [];
+                        }
+                    });
+
+                    const results = await Promise.all(promises);
+                    const flatResults = results.flat();
+                    setGlobalResults(flatResults);
+
+                } catch (e) {
+                    console.error("Global search failed", e);
+                } finally {
+                    setIsGlobalSearching(false);
+                }
+
+            }, 500); // 500ms debounce
+
+            return () => clearTimeout(timer);
+        }
+    }, [searchQuery, packages, searchScope, projects]);
+
+    const handleSelectGlobalResult = (project: Project, pkg: Package) => {
+        // Switch context to that project
+        setSearchScope('current'); // Switch back to 'current' scope
+        setActiveProject(project); // Set active project (triggers loadPackages)
+
+        // We need to wait for packages to load to select it? 
+        // Actually loadPackages runs on activeProject change.
+        // We can optimistically set selectedPackage, but it might get overwritten or not found if load fails.
+        // Better: Pre-select it after load? 
+        // For now, let's just switch project and try to set selectedPackage. 
+        // Since loadPackages is async, we might need a refined approach, 
+        // but let's try setting it immediately. 
+        // If loadPackages replaces `packages` state, we just need to ensure `selectedPackage` isn't lost if it exists there.
+        // However, `loadPackages` doesn't clear `selectedPackage` explicitly unless logic dictates.
+
+        // Let's set a "pending selection" or just set it. 
+        // If the packages list reloads, we need to make sure we find *this* package object from the new list 
+        // so object identity matches if we use referential checks, or just use ID/Name check.
+        // Our PackageDetails uses `selectedPackage` object.
+
+        // Force the package into the view:
+        setSelectedPackage(pkg);
+        setSearchQuery(pkg.name); // Filter the list to show just this package so user sees context
+    };
+
     const handleUpdateClick = (pkg: Package, version: string) => {
         setPackageToUpdate(pkg);
         setTargetVersion(version);
@@ -392,7 +510,7 @@ function App() {
         setIsModalOpen(true);
     };
 
-    const [lastHistoryUpdate, setLastHistoryUpdate] = useState(Date.now());
+
 
     const saveHistoryEntry = async (pkgName: string, type: 'upgrade' | 'downgrade' | 'rollback', from: string, to: string) => {
         if (!activeProject) return;
@@ -552,55 +670,86 @@ function App() {
                             </header>
                             <div className="content-split">
                                 <div className="filter-bar">
-                                    <input
-                                        type="text"
-                                        className="search-input"
-                                        placeholder={t('app.searchPlaceholder')}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        autoFocus
-                                    />
+                                    <div className="search-container">
+                                        <input
+                                            type="text"
+                                            className="search-input"
+                                            placeholder={t('app.searchPlaceholder')}
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            autoFocus
+                                        />
+                                        <select
+                                            className="search-scope-select"
+                                            value={searchScope}
+                                            onChange={(e) => setSearchScope(e.target.value as 'current' | 'all')}
+                                        >
+                                            <option value="current">{t('app.searchScope.current')}</option>
+                                            <option value="all">{t('app.searchScope.all')}</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                {isLoading ? (
-                                    <div className="loading-state">
-                                        <div className="spinner"></div>
-                                        <p>{t('app.loading')}</p>
-                                    </div>
-                                ) : error ? (
-                                    <div className="error-state">
-                                        <h3>{t('app.errorHeader')}</h3>
-                                        <p className="error-message">{error}</p>
-                                        <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
-                                            {t('app.retry')}
-                                        </button>
-                                    </div>
-                                ) : packages.length === 0 ? (
-                                    <div className="empty-project-state">
-                                        <div className="empty-content">
-                                            <h3>{t('project.noDependenciesHeader')}</h3>
-                                            <p>{t('project.noDependenciesMessage')}</p>
-                                        </div>
+                                {searchScope === 'all' ? (
+                                    /* Global Search View */
+                                    <div className="global-search-wrapper">
+                                        {isGlobalSearching ? (
+                                            <div className="loading-state">
+                                                <div className="spinner"></div>
+                                                <p>{t('app.search.searchingAll')}</p>
+                                            </div>
+                                        ) : (
+                                            <GlobalSearchResults
+                                                results={globalResults}
+                                                onSelect={handleSelectGlobalResult}
+                                                searchQuery={searchQuery}
+                                            />
+                                        )}
                                     </div>
                                 ) : (
-                                    <div className="main-split-view">
-                                        <PackageTable
-                                            packages={filteredPackages}
-                                            selectedPackage={selectedPackage}
-                                            onSelect={setSelectedPackage}
-                                            lastUpdatedPackage={lastUpdatedPackage}
-                                        />
-                                        <PackageDetails
-                                            pkg={selectedPackage}
-                                            projectPath={activeProject?.path || ""}
-                                            isUpdating={isUpdating}
-                                            isReadOnly={!activeProject.is_writable}
-                                            lastUpdated={lastHistoryUpdate}
-                                            onUpdate={handleUpdateClick}
-                                            onInstallSpecific={handleInstallSpecific}
-                                            onRollback={handleRollback}
-                                            onReadOnlyWarning={() => setToastMessage(t('project.readOnly'))}
-                                        />
-                                    </div>
+                                    /* Local Project View */
+                                    <>
+                                        {isLoading ? (
+                                            <div className="loading-state">
+                                                <div className="spinner"></div>
+                                                <p>{t('app.loading')}</p>
+                                            </div>
+                                        ) : error ? (
+                                            <div className="error-state">
+                                                <h3>{t('app.errorHeader')}</h3>
+                                                <p className="error-message">{error}</p>
+                                                <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
+                                                    {t('app.retry')}
+                                                </button>
+                                            </div>
+                                        ) : packages.length === 0 ? (
+                                            <div className="empty-project-state">
+                                                <div className="empty-content">
+                                                    <h3>{t('project.noDependenciesHeader')}</h3>
+                                                    <p>{t('project.noDependenciesMessage')}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="main-split-view">
+                                                <PackageTable
+                                                    packages={filteredPackages}
+                                                    selectedPackage={selectedPackage}
+                                                    onSelect={setSelectedPackage}
+                                                    lastUpdatedPackage={lastUpdatedPackage}
+                                                />
+                                                <PackageDetails
+                                                    pkg={selectedPackage}
+                                                    projectPath={activeProject?.path || ""}
+                                                    isUpdating={isUpdating}
+                                                    isReadOnly={!activeProject.is_writable}
+                                                    lastUpdated={lastHistoryUpdate}
+                                                    onUpdate={handleUpdateClick}
+                                                    onInstallSpecific={handleInstallSpecific}
+                                                    onRollback={handleRollback}
+                                                    onReadOnlyWarning={() => setToastMessage(t('project.readOnly'))}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div >

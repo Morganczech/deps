@@ -10,7 +10,16 @@
         "retry": "Zkusit znovu",
         "welcome": "Vítejte v Deps",
         "openFolderSort": "Otevřete složku s Node.js projekty.",
-        "selectFolder": "Vybrat složku"
+        "selectFolder": "Vybrat složku",
+        "searchScope": {
+            "current": "Tento projekt",
+            "all": "Všechny projekty"
+        },
+        "search": {
+            "searchingAll": "Hledám ve všech projektech...",
+            "noGlobalResults": "Žádné balíčky odpovídající \"{{query}}\" nebyly nalezeny",
+            "resultsCount": "Nalezeno {{count}} balíčků v {{projects}} projektech"
+        }
     },
     "project": {
         "installDependencies": "Nainstalovat závislosti",
