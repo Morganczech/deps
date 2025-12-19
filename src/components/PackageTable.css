@@ -88,3 +88,13 @@
     background-color: #8ff0a4; /* Adwaita Green Lighter */
     color: #1e1e1e; /* Dark text for contrast */
 }
+
+.badge-gray {
+    background-color: #5e5c64;
+    color: #deddda;
+}
+
+.row-not-installed {
+    opacity: 0.5;
+}
+

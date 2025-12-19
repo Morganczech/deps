@@ -17,6 +17,7 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
             case 'Major': return <span className="badge badge-major">{texts.table.badges.major}</span>;
             case 'Minor': return <span className="badge badge-minor">{texts.table.badges.minor}</span>;
             case 'UpToDate': return <span className="badge badge-ok">{texts.table.badges.upToDate}</span>;
+            case 'NotInstalled': return <span className="badge badge-gray">Not Installed</span>;
             default: return null;
         }
     };
@@ -43,6 +44,7 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
                             className={`
                                 ${selectedPackage?.name === pkg.name ? 'selected' : ''}
                                 ${lastUpdatedPackage === pkg.name ? 'flash-update' : ''}
+                                ${pkg.update_status === 'NotInstalled' ? 'row-not-installed' : ''}
                             `}
                             onClick={() => onSelect(pkg)}
                         >

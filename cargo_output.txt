@@ -1,0 +1,14 @@
+   Compiling app v0.1.0 (/home/openfreedom/projects/deps/src-tauri)
+error[E0599]: no variant or associated item named `NotInstalled` found for enum `UpdateStatus` in the current scope
+  --> src/npm.rs:67:54
+   |
+67 |                         update_status: UpdateStatus::NotInstalled,
+   |                                                      ^^^^^^^^^^^^ variant or associated item not found in `UpdateStatus`
+   |
+  ::: src/models/mod.rs:13:1
+   |
+13 | pub enum UpdateStatus {
+   | --------------------- variant or associated item `NotInstalled` not found for this enum
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `app` (bin "app") due to 1 previous error

@@ -67,7 +67,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
             )}
 
             <div className="details-actions">
-                {pkg.update_status !== 'UpToDate' && (
+                {pkg.update_status !== 'UpToDate' && pkg.update_status !== 'NotInstalled' && (
                     <button
                         className={btnClass("btn-primary")}
                         onClick={() => handleAction(() => onUpdate(pkg, pkg.wanted_version || pkg.latest_version || ""))}
@@ -92,7 +92,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                 <button
                     className={btnClass("btn-text")}
                     onClick={() => handleAction(() => onInstallSpecific(pkg))}
-                    disabled={isUpdating}
+                    disabled={isUpdating || pkg.update_status === 'NotInstalled'}
                 >
                     {texts.details.installSpecific}
                 </button>

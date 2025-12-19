@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { listen } from '@tauri-apps/api/event';
+
+// We don't expose fetchPackages directly anymore...
 import { Sidebar } from "./components/Sidebar";
 import { Project, Package } from "./types";
 import { Terminal } from "./components/Terminal";
@@ -50,6 +53,17 @@ function App() {
         loadWorkspace();
     }, []);
 
+    // Listen for npm install output events
+    useEffect(() => {
+        const unlisten = listen<string>('npm-install-output', (event) => {
+            setTerminalOutput(prev => [...prev, event.payload]);
+        });
+
+        return () => {
+            unlisten.then(f => f());
+        };
+    }, []);
+
     const handleScanWorkspace = async (path: string) => {
         setIsScanning(true);
         setProjects([]);
@@ -90,6 +104,7 @@ function App() {
         setShowTerminal(true);
 
         const timestamp = new Date().toLocaleTimeString();
+        // Clear terminal or separate entries? Separator is better.
         setTerminalOutput(prev => [...prev, `[${timestamp}] > npm install in ${activeProject.name}`]);
 
         try {
@@ -105,7 +120,7 @@ function App() {
             const updated = result.find(p => p.path === activeProject.path);
             if (updated) {
                 setProjects(result);
-                setActiveProject(updated); // This will trigger the useEffect to load packages
+                setActiveProject(updated);
             }
         } catch (e) {
             const endTimestamp = new Date().toLocaleTimeString();
@@ -316,7 +331,7 @@ function App() {
                                         {isInstalling ? (
                                             <>
                                                 <span className="spinner-small"></span>
-                                                Installing...
+                                                Installing dependencies...
                                             </>
                                         ) : "Install dependencies"}
                                     </button>

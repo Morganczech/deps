@@ -6,7 +6,7 @@ export interface Project {
     has_node_modules: boolean;
 }
 
-export type UpdateStatus = 'UpToDate' | 'Minor' | 'Major' | 'Error';
+export type UpdateStatus = 'UpToDate' | 'Minor' | 'Major' | 'Error' | 'NotInstalled';
 
 export interface Package {
     name: string;

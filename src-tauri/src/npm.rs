@@ -1,10 +1,13 @@
 use crate::models::{Package, UpdateStatus};
 use std::collections::HashMap;
-use tokio::process::Command; // Use tokio::process::Command
+use tokio::process::Command; 
 use std::path::Path;
 use std::fs;
 use serde::Deserialize;
-use tokio::time::{timeout, Duration}; // Add timeout related imports
+use tokio::time::{timeout, Duration}; 
+use tauri::{Emitter, Window};
+use tokio::io::{BufReader, AsyncBufReadExt};
+use std::process::Stdio;
 
 const USE_MOCK: bool = false;
 
@@ -48,14 +51,42 @@ pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> 
     let pkg_json: PackageJson = serde_json::from_str(&pkg_json_content)
         .map_err(|e| format!("Failed to parse package.json: {}", e))?;
 
+    // Check if node_modules exists
+    let node_modules_exists = Path::new(&project_path).join("node_modules").exists();
+
+    if !node_modules_exists {
+         // Fallback: Return packages based on package.json only with NotInstalled status
+         let mut add_deps = |deps: Option<HashMap<String, String>>, is_dev: bool| {
+            if let Some(d) = deps {
+                for (name, version) in d {
+                    packages.push(Package {
+                        name,
+                        current_version: "".to_string(), // Unknown
+                        wanted_version: Some(version.clone()),
+                        latest_version: None,
+                        update_status: UpdateStatus::NotInstalled,
+                        is_dev,
+                        repository: None,
+                        homepage: None,
+                    });
+                }
+            }
+         };
+         add_deps(pkg_json.dependencies, false);
+         add_deps(pkg_json.dev_dependencies, true);
+         
+         packages.sort_by(|a, b| a.name.cmp(&b.name));
+         return Ok(packages);
+    }
+
     // 2. Run npm outdated --json with TIMEOUT
     // Exit code 0 = all good, 1 = outdated packages exist.
     
     let child = Command::new("npm")
         .args(["outdated", "--json"])
         .current_dir(&project_path)
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| format!("Failed to spawn npm: {}", e))?;
 
@@ -70,12 +101,10 @@ pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> 
     let outdated_map: HashMap<String, OutdatedInfo> = if output.status.success() || output.status.code() == Some(1) {
         serde_json::from_slice(&output.stdout).unwrap_or_default()
     } else {
-        // If exit code is not 0 or 1, it might be a real error (e.g. missing node_modules)
-        // We can capture stderr
+        // If exit code is not 0 or 1, it might be a real error 
         let stderr = String::from_utf8_lossy(&output.stderr);
-        if stderr.contains("Cannot find module") || !Path::new(&project_path).join("node_modules").exists() {
-             return Err("Missing node_modules? Try running npm install.".to_string());
-        }
+        // Even if we checked node_modules before, it might have been deleted or corrupted.
+        // If we fall here, return error.
         return Err(format!("npm exited with error: {}", stderr));
     };
 
@@ -191,7 +220,7 @@ pub async fn update_package(project_path: String, package_name: String, version:
 }
 
 #[tauri::command]
-pub async fn install_dependencies(project_path: String) -> Result<(), String> {
+pub async fn install_dependencies(window: Window, project_path: String) -> Result<(), String> {
     if USE_MOCK {
         return Ok(());
     }
@@ -215,17 +244,41 @@ pub async fn install_dependencies(project_path: String) -> Result<(), String> {
         }
     }
 
-    // Run npm install
-    let output = Command::new("npm")
+    // Run npm install with streaming
+    let mut child = Command::new("npm")
         .arg("install")
         .current_dir(&project_path)
-        .output()
-        .await
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .map_err(|e| format!("Failed to execute npm: {}", e))?;
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("npm install failed: {}", stderr));
+    let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+    let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
+
+    let mut stdout_reader = BufReader::new(stdout).lines();
+    let mut stderr_reader = BufReader::new(stderr).lines();
+
+    let window_rx = window.clone();
+    
+    let w1 = window_rx.clone();
+    tokio::spawn(async move {
+        while let Ok(Some(line)) = stdout_reader.next_line().await {
+             let _ = w1.emit("npm-install-output", line);
+        }
+    });
+
+    let w2 = window_rx.clone();
+    tokio::spawn(async move {
+        while let Ok(Some(line)) = stderr_reader.next_line().await {
+             let _ = w2.emit("npm-install-output", line);
+        }
+    });
+
+    let status = child.wait().await.map_err(|e| format!("Failed to wait on npm: {}", e))?;
+
+    if !status.success() {
+        return Err("npm install failed".to_string());
     }
 
     Ok(())
