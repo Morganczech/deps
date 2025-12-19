@@ -142,33 +142,38 @@ function App() {
 
     useEffect(() => {
         let isCurrent = true;
+        let timer: ReturnType<typeof setTimeout>;
 
         if (activeProject) {
-            setIsLoading(true);
-            setError(null);
-            setPackages([]);
-            setSelectedPackage(null);
+            // Debounce to prevent double-firing in StrictMode and rapid clicks
+            timer = setTimeout(() => {
+                setIsLoading(true);
+                setError(null);
+                setPackages([]);
+                setSelectedPackage(null);
 
-            // Fetch packages for the active project
-            api.getPackages(activeProject.path)
-                .then((pkgs) => {
-                    if (isCurrent) {
-                        setPackages(pkgs);
-                        if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
-                        setIsLoading(false);
-                    }
-                })
-                .catch((err) => {
-                    if (isCurrent) {
-                        console.error(err);
-                        setError(typeof err === 'string' ? err : "Failed to load packages");
-                        setIsLoading(false);
-                    }
-                });
+                // Fetch packages for the active project
+                api.getPackages(activeProject.path)
+                    .then((pkgs) => {
+                        if (isCurrent) {
+                            setPackages(pkgs);
+                            if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
+                            setIsLoading(false);
+                        }
+                    })
+                    .catch((err) => {
+                        if (isCurrent) {
+                            console.error(err);
+                            setError(typeof err === 'string' ? err : "Failed to load packages");
+                            setIsLoading(false);
+                        }
+                    });
+            }, 100);
         }
 
         return () => {
             isCurrent = false;
+            if (timer) clearTimeout(timer);
         };
     }, [activeProject, refreshTrigger]);
 

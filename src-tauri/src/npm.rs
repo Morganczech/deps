@@ -57,32 +57,38 @@ pub async fn get_packages(project_path: String) -> Result<Vec<Package>, String> 
     // 2. Run npm outdated --json with TIMEOUT
     // Note: npm outdated works even without node_modules, it just reports "MISSING" as current.
     
-    let child = Command::new("npm")
-        .args(["outdated", "--json"])
+    let mut cmd = Command::new("npm");
+    cmd.args(["outdated", "--json"])
         .current_dir(&project_path)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .spawn()
+        .kill_on_drop(true); // Ensure we don't leave zombie processes
+
+    let child = cmd.spawn()
         .map_err(|e| format!("Failed to spawn npm: {}", e))?;
 
-    let output_result = timeout(Duration::from_secs(15), child.wait_with_output()).await;
+    let output_result = timeout(Duration::from_secs(30), child.wait_with_output()).await;
 
-    let output = match output_result {
-        Ok(Ok(o)) => o,
-        Ok(Err(e)) => return Err(format!("Failed to wait for npm output: {}", e)),
-        Err(_) => return Err("npm outdated timed out after 15 seconds".to_string()),
-    };
-
-    let outdated_map: HashMap<String, OutdatedInfo> = if output.status.success() || output.status.code() == Some(1) {
-        serde_json::from_slice(&output.stdout).unwrap_or_default()
-    } else {
-        // If exit code is not 0 or 1, and node_modules is missing, it might be that npm outdated failed for other reasons.
-        // But usually it works. If it fails, we fall back to empty map.
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        // Only error if we really can't proceed. If node_modules is missing, npm might complain differently depending on version.
-        // Let's log it but try to proceed with empty outdated info if it failed.
-        // Actually, for better UX, if it fails, we just don't have 'latest' info.
-        HashMap::new()
+    // Soft fallback: If npm outdated fails/times out, we just have empty outdated info.
+    // We do NOT want to fail the whole package list loading.
+    let outdated_map: HashMap<String, OutdatedInfo> = match output_result {
+        Ok(Ok(output)) => {
+            if output.status.success() || output.status.code() == Some(1) {
+                serde_json::from_slice(&output.stdout).unwrap_or_default()
+            } else {
+                 let stderr = String::from_utf8_lossy(&output.stderr);
+                 println!("npm outdated failed with status {:?}: {}", output.status.code(), stderr);
+                 HashMap::new()
+            }
+        },
+        Ok(Err(e)) => {
+            println!("npm outdated process error: {}", e);
+            HashMap::new()
+        },
+        Err(_) => {
+            println!("npm outdated timed out after 30 seconds");
+            HashMap::new()
+        }
     };
 
     // 3. Merge
