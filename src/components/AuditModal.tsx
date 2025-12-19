@@ -23,17 +23,19 @@ interface AuditModalProps {
     result: AuditResult | null;
     isLoading: boolean;
     onClose: () => void;
+    onFix?: () => void;
+    isFixing?: boolean;
 }
 
-export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoading, onClose }) => {
+export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoading, onClose, onFix, isFixing }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="audit-modal-overlay" onClick={onClose}>
+        <div className="audit-modal-overlay" onClick={isFixing ? undefined : onClose}>
             <div className="audit-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h3>Security Audit</h3>
-                    <button className="close-btn" onClick={onClose}>×</button>
+                    <h3>{isFixing ? "Fixing Vulnerabilities..." : "Security Audit"}</h3>
+                    {!isFixing && <button className="close-btn" onClick={onClose}>×</button>}
                 </div>
 
                 <div className="modal-body">
@@ -45,6 +47,12 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                             <button className="btn-secondary btn-cancel" onClick={onClose}>
                                 Cancel
                             </button>
+                        </div>
+                    ) : isFixing ? (
+                        <div className="audit-loading">
+                            <div className="spinner"></div>
+                            <p>Running `npm audit fix`...</p>
+                            <span className="hint">Check the terminal for details.</span>
                         </div>
                     ) : result ? (
                         <div className="audit-results">
@@ -98,7 +106,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                                 <p>
                                     {result.counts.total === 0
                                         ? "Your dependencies look safe and sound."
-                                        : "Run `npm audit fix` in your terminal to address these issues automatically."}
+                                        : "Run `npm audit fix` to address these issues automatically."}
                                 </p>
                             </div>
                         </div>
@@ -109,9 +117,16 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, result, isLoadin
                     )}
                 </div>
 
-                <div className="modal-actions">
-                    <button className="btn-primary" onClick={onClose}>Close</button>
-                </div>
+                {!isLoading && !isFixing && (
+                    <div className="modal-actions">
+                        {result && result.counts.total > 0 && onFix && (
+                            <button className="btn-primary" onClick={onFix}>
+                                Run `npm audit fix`
+                            </button>
+                        )}
+                        <button className="btn-secondary" onClick={onClose}>Close</button>
+                    </div>
+                )}
             </div>
         </div>
     );

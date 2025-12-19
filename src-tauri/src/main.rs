@@ -18,6 +18,7 @@ fn main() {
             npm::update_package,
             npm::install_dependencies,
             npm::run_audit,
+            npm::run_audit_fix,
             workspace::get_last_workspace,
             workspace::save_workspace,
         ])

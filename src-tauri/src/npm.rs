@@ -451,6 +451,79 @@ pub async fn run_audit(project_path: String) -> Result<AuditResult, String> {
     })
 }
 
+#[tauri::command]
+pub async fn run_audit_fix(window: Window, project_path: String) -> Result<(), String> {
+    if USE_MOCK {
+        return Ok(());
+    }
+
+    let path = Path::new(&project_path);
+    if !path.exists() {
+        return Err("Project path does not exist".to_string());
+    }
+    
+    // Safety check just in case, though usually frontend handles it
+    if let Ok(metadata) = fs::metadata(path.join("package.json")) {
+        if metadata.permissions().readonly() {
+            return Err("Project is read-only. Cannot fix vulnerabilities.".to_string());
+        }
+    }
+
+    println!("Spawning npm audit fix for: {}", project_path);
+    
+    // Use same streaming logic as install_dependencies
+    
+    let mut child = Command::new("npm")
+        .args(["audit", "fix"])
+        .current_dir(&project_path)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .kill_on_drop(true)
+        .spawn()
+        .map_err(|e| format!("Failed to spawn npm audit fix: {}", e))?;
+
+    let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+    let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
+
+    let mut stdout_reader = BufReader::new(stdout).lines();
+    let mut stderr_reader = BufReader::new(stderr).lines();
+
+    let window_rx = window.clone();
+    
+    // We reuse 'npm-install-output' event so the existing frontend listener works.
+    // Or we could create a new 'npm-command-output' if we want to be generic. 
+    // Let's reuse 'npm-install-output' for simplicity as per plan.
+    
+    let w1 = window_rx.clone();
+    tokio::spawn(async move {
+        while let Ok(Some(line)) = stdout_reader.next_line().await {
+             let _ = w1.emit("npm-install-output", line);
+        }
+    });
+
+    let w2 = window_rx.clone();
+    tokio::spawn(async move {
+        while let Ok(Some(line)) = stderr_reader.next_line().await {
+             let _ = w2.emit("npm-install-output", line);
+        }
+    });
+
+    // 2 minutes timeout for fix (installing packages can take time)
+    let output_result = timeout(Duration::from_secs(120), child.wait()).await;
+
+    match output_result {
+        Ok(Ok(status)) => {
+            if status.success() {
+                Ok(())
+            } else {
+                 Err(format!("npm audit fix failed with status: {}", status))
+            }
+        },
+        Ok(Err(e)) => Err(format!("Failed to wait for npm audit fix: {}", e)),
+        Err(_) => Err("npm audit fix timed out".to_string()),
+    }
+}
+
 fn get_mock_packages() -> Vec<Package> {
 // ...
     vec![

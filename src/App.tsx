@@ -182,6 +182,37 @@ function App() {
         }
     };
 
+    const [isAuditFixing, setIsAuditFixing] = useState(false);
+
+    const handleAuditFix = async () => {
+        if (!activeProject) return;
+
+        // Close modal so user can see terminal
+        setIsAuditOpen(false);
+        setIsAuditFixing(true);
+        setShowTerminal(true);
+        const timestamp = new Date().toLocaleTimeString();
+        setTerminalOutput(prev => [...prev, `[${timestamp}] > npm audit fix`]);
+
+        try {
+            await api.auditFix(activeProject.path);
+
+            setTerminalOutput(prev => [...prev, `[${new Date().toLocaleTimeString()}] ✅ Audit fix completed.`]);
+            setToastType('success');
+            setToastMessage("Audit fix completed");
+
+            // Re-run audit to see results
+            handleRunAudit();
+        } catch (e) {
+            console.error("Audit fix failed", e);
+            setToastType('error');
+            setToastMessage("Audit fix failed");
+            setTerminalOutput(prev => [...prev, `[${new Date().toLocaleTimeString()}] ❌ Audit fix failed: ${e}`]);
+        } finally {
+            setIsAuditFixing(false);
+        }
+    };
+
     // We don't expose fetchPackages directly anymore to avoid race conditions.
     // Instead we rely on the useEffect below reacting to activeProject changes.
 
@@ -474,6 +505,8 @@ function App() {
                 result={auditResult}
                 isLoading={isAuditing}
                 onClose={() => setIsAuditOpen(false)}
+                onFix={handleAuditFix}
+                isFixing={isAuditFixing}
             />
             <Toast
                 message={toastMessage}

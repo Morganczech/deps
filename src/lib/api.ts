@@ -65,6 +65,10 @@ export const api = {
         return invoke('run_audit', { projectPath });
     },
 
+    async auditFix(projectPath: string): Promise<void> {
+        return invoke('run_audit_fix', { projectPath });
+    },
+
     async openUrl(url: string): Promise<void> {
         // Use the shell plugin for system browser
         await open(url);
