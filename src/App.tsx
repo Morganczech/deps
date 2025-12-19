@@ -270,7 +270,13 @@ function App() {
                     .then((pkgs) => {
                         if (isCurrent) {
                             setPackages(pkgs);
-                            if (pkgs.length > 0) setSelectedPackage(pkgs[0]);
+                            setSelectedPackage(prev => {
+                                if (prev) {
+                                    const found = pkgs.find(p => p.name === prev.name);
+                                    if (found) return found;
+                                }
+                                return pkgs.length > 0 ? pkgs[0] : null;
+                            });
                             setIsLoading(false);
                         }
                     })
@@ -345,45 +351,93 @@ function App() {
         setIsModalOpen(true);
     };
 
-    const handleConfirmUpdate = async () => {
+    const [lastHistoryUpdate, setLastHistoryUpdate] = useState(Date.now());
+
+    const saveHistoryEntry = async (pkgName: string, type: 'upgrade' | 'downgrade' | 'rollback', from: string, to: string) => {
+        if (!activeProject) return;
+        try {
+            await api.savePackageHistory(activeProject.path, pkgName, {
+                type,
+                from,
+                to,
+                date: new Date().toISOString()
+            });
+            setLastHistoryUpdate(Date.now());
+        } catch (e) {
+            console.error("Failed to save history", e);
+        }
+    };
+
+    const handleRollback = async (version: string) => {
+        if (!selectedPackage) return;
+        // Reuse the update flow but mark as rollback
+        setPackageToUpdate(selectedPackage);
+        setTargetVersion(version);
+        // We can use a different modal or just confirm. 
+        // Spec says "Rollback je jedno-klikový" (one-click).
+        // So NO modal.
+
+        handleConfirmUpdate(true, version);
+    };
+
+    // Modified to accept 'isRollback' override
+    const handleConfirmUpdate = async (isRollback: boolean = false, rollbackVersion?: string) => {
         if (!packageToUpdate || !activeProject) return;
 
-        setIsModalOpen(false);
+        // If rollback, we might not have isModalOpen true, so we don't need to close it.
+        if (!isRollback) setIsModalOpen(false);
+
         setShowTerminal(true);
         setIsUpdating(true);
 
-        const timestamp = new Date().toLocaleTimeString();
-        const cmd = `[${timestamp}] > npm install ${packageToUpdate.name}@${targetVersion}`;
-        setTerminalOutput(prev => [...prev, cmd, `[${timestamp}] Starting update...`]);
+        const versionToInstall = isRollback && rollbackVersion ? rollbackVersion : targetVersion;
+        const pkg = packageToUpdate;
 
-        // Immediate feedback
+        const timestamp = new Date().toLocaleTimeString();
+        const cmd = `[${timestamp}] > npm install ${pkg.name}@${versionToInstall}`;
+        setTerminalOutput(prev => [...prev, cmd, `[${timestamp}] Starting ${isRollback ? 'rollback' : 'update'}...`]);
+
         setToastType('info');
-        setToastMessage(`Updating ${packageToUpdate.name} to ${targetVersion}...`);
+        setToastMessage(`${isRollback ? 'Rolling back' : 'Updating'} ${pkg.name} to ${versionToInstall}...`);
 
         try {
-            await api.updatePackage(activeProject.path, packageToUpdate.name, targetVersion);
+            await api.updatePackage(activeProject.path, pkg.name, versionToInstall);
 
             const endTimestamp = new Date().toLocaleTimeString();
-            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ Update completed successfully.`]);
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ ${isRollback ? 'Rollback' : 'Update'} completed successfully.`]);
             setToastType('success');
-            setToastMessage("Update completed");
-            setLastUpdatedPackage(packageToUpdate.name);
+            setToastMessage(`${isRollback ? 'Rollback' : 'Update'} completed`);
+            setLastUpdatedPackage(pkg.name);
+
+            // Save History
+            const fromVer = pkg.current_version;
+            const toVer = versionToInstall;
+            let type: 'upgrade' | 'downgrade' | 'rollback' = isRollback ? 'rollback' : 'upgrade';
+
+            if (!isRollback) {
+                // Detect upgrade vs downgrade
+                if (compareVersions(toVer, fromVer) < 0) type = 'downgrade';
+            }
+
+            await saveHistoryEntry(pkg.name, type, fromVer, toVer);
 
             // Refresh logic
             refreshCurrentProject();
 
         } catch (e) {
             const endTimestamp = new Date().toLocaleTimeString();
-            const errMsg = typeof e === 'string' ? e : "Unknown error during update";
+            const errMsg = typeof e === 'string' ? e : "Unknown error";
             setTerminalOutput(prev => [...prev, `[${endTimestamp}] ❌ Error: ${errMsg}`]);
             setToastType('error');
-            setToastMessage("Update failed");
-            setShowTerminal(true); // Automaticky otevře terminál při chybě
+            setToastMessage("Operation failed");
+            setShowTerminal(true);
             console.error(e);
         } finally {
             setIsUpdating(false);
         }
     };
+
+    // ... (rest of App)
 
     return (
         <div className="app-container">
@@ -472,14 +526,6 @@ function App() {
                                     <div className="error-state">
                                         <h3>{texts.states.errorHeader}</h3>
                                         <p className="error-message">{error}</p>
-                                        {error.includes("npm install") && (
-                                            <div className="error-actions">
-                                                <p className="hint">{texts.states.nodeModulesMissing}</p>
-                                                <button className="btn-primary" onClick={() => alert(texts.states.installHint)}>
-                                                    {texts.states.installDependencies}
-                                                </button>
-                                            </div>
-                                        )}
                                         <button className="btn-secondary" onClick={() => activeProject && refreshCurrentProject()}>
                                             {texts.app.retry}
                                         </button>
@@ -501,19 +547,23 @@ function App() {
                                         />
                                         <PackageDetails
                                             pkg={selectedPackage}
+                                            projectPath={activeProject?.path || ""}
                                             isUpdating={isUpdating}
                                             isReadOnly={!activeProject.is_writable}
+                                            lastUpdated={lastHistoryUpdate}
                                             onUpdate={handleUpdateClick}
                                             onInstallSpecific={handleInstallSpecific}
+                                            onRollback={handleRollback}
                                             onReadOnlyWarning={() => setToastMessage(texts.app.readOnlyTooltip)}
                                         />
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    ) : null}
-                </main>
-            </div>
+                        </div >
+                    ) : null
+                    }
+                </main >
+            </div >
             <Terminal
                 isVisible={showTerminal}
                 output={terminalOutput}
@@ -524,7 +574,7 @@ function App() {
                 packageToUpdate={packageToUpdate}
                 targetVersion={targetVersion}
                 customWarning={customWarning}
-                onConfirm={handleConfirmUpdate}
+                onConfirm={() => handleConfirmUpdate(false)}
                 onCancel={() => setIsModalOpen(false)}
             />
             <VersionInputModal
@@ -556,12 +606,12 @@ function App() {
                 onShowOutput={() => setShowTerminal(true)}
                 onAction={
                     toastType === 'error' && toastMessage === "Update failed"
-                        ? handleConfirmUpdate
+                        ? () => handleConfirmUpdate(false)
                         : undefined
                 }
                 actionLabel="Retry"
             />
-        </div>
+        </div >
     );
 }
 

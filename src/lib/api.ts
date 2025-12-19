@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { open } from "@tauri-apps/plugin-shell";
-import { Project, Package } from "../types";
+import { Project, Package, PackageHistoryEntry } from "../types";
 
 export const api = {
     selectFolder: async (): Promise<string | null> => {
@@ -80,5 +80,17 @@ export const api = {
 
     async unwatchProject(): Promise<void> {
         return invoke('unwatch_project');
+    },
+
+    async savePackageHistory(projectPath: string, packageName: string, entry: PackageHistoryEntry): Promise<void> {
+        return invoke('save_package_history', { projectPath, package: packageName, entry });
+    },
+
+    async getPackageHistory(projectPath: string, packageName: string): Promise<PackageHistoryEntry[]> {
+        return invoke('get_package_history', { projectPath, package: packageName });
+    },
+
+    async updateLastPackageHistoryNote(projectPath: string, packageName: string, note: string): Promise<void> {
+        return invoke('update_last_package_history_note', { projectPath, package: packageName, note });
     }
 };

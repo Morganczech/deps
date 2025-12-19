@@ -5,6 +5,7 @@ mod npm;
 mod project;
 mod workspace;
 mod watcher;
+mod history;
 
 use tauri::Builder;
 
@@ -25,6 +26,9 @@ fn main() {
             workspace::save_workspace,
             watcher::watch_project,
             watcher::unwatch_project,
+            history::save_package_history,
+            history::get_package_history,
+            history::update_last_package_history_note,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

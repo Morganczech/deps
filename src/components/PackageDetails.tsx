@@ -2,23 +2,30 @@ import React, { useState, useEffect } from "react";
 import { Package } from '../types';
 import { api } from '../lib/api';
 import { texts } from '../i18n/texts';
+import { PackageHistory } from './PackageHistory';
 import './PackageDetails.css';
 
 interface PackageDetailsProps {
     pkg: Package | null;
+    projectPath: string;
     isUpdating: boolean;
     isReadOnly: boolean;
+    lastUpdated?: number;
     onUpdate: (pkg: Package, version: string) => void;
     onInstallSpecific: (pkg: Package) => void;
+    onRollback: (version: string) => void;
     onReadOnlyWarning: () => void;
 }
 
 export const PackageDetails: React.FC<PackageDetailsProps> = ({
     pkg,
+    projectPath,
     isUpdating,
     isReadOnly,
+    lastUpdated,
     onUpdate,
     onInstallSpecific,
+    onRollback,
     onReadOnlyWarning
 }) => {
     const [shakingPkg, setShakingPkg] = useState<string | null>(null);
@@ -132,6 +139,13 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                     )}
                 </div>
             </div>
+
+            <PackageHistory
+                projectPath={projectPath}
+                packageName={pkg.name}
+                onRollback={onRollback}
+                lastUpdated={lastUpdated}
+            />
         </div>
     );
 };

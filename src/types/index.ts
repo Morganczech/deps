@@ -18,3 +18,11 @@ export interface Package {
     repository?: string;
     homepage?: string;
 }
+
+export interface PackageHistoryEntry {
+    type: 'upgrade' | 'downgrade' | 'rollback';
+    from: string;
+    to: string;
+    date: string;
+    note?: string;
+}
