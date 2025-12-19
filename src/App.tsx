@@ -436,18 +436,21 @@ function App() {
 
         const timestamp = new Date().toLocaleTimeString();
         const cmd = `[${timestamp}] > npm install ${pkg.name}@${versionToInstall}`;
-        setTerminalOutput(prev => [...prev, cmd, `[${timestamp}] Starting ${isRollback ? 'rollback' : 'update'}...`]);
+        setTerminalOutput(prev => [...prev, cmd, `[${timestamp}] ${isRollback ? t('terminal.startingRollback') : t('terminal.startingUpdate')}...`]);
 
         setToastType('info');
-        setToastMessage(`${isRollback ? 'Rolling back' : 'Updating'} ${pkg.name} to ${versionToInstall}...`);
+        setToastMessage(isRollback
+            ? t('toast.rollingBack', { name: pkg.name, version: versionToInstall })
+            : t('toast.updating', { name: pkg.name, version: versionToInstall })
+        );
 
         try {
             await api.updatePackage(activeProject.path, pkg.name, versionToInstall);
 
             const endTimestamp = new Date().toLocaleTimeString();
-            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ ${isRollback ? 'Rollback' : 'Update'} completed successfully.`]);
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ✅ ${isRollback ? t('terminal.rollbackSuccess') : t('terminal.updateSuccess')}`]);
             setToastType('success');
-            setToastMessage(`${isRollback ? 'Rollback' : 'Update'} completed`);
+            setToastMessage(isRollback ? t('toast.rollbackCompleted') : t('toast.updateCompleted'));
             setLastUpdatedPackage(pkg.name);
 
             // Save History
@@ -468,9 +471,9 @@ function App() {
         } catch (e) {
             const endTimestamp = new Date().toLocaleTimeString();
             const errMsg = typeof e === 'string' ? e : "Unknown error";
-            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ❌ Error: ${errMsg}`]);
+            setTerminalOutput(prev => [...prev, `[${endTimestamp}] ❌ ${t('terminal.error')}: ${errMsg}`]);
             setToastType('error');
-            setToastMessage("Operation failed");
+            setToastMessage(t('toast.failed'));
             setShowTerminal(true);
             console.error(e);
         } finally {

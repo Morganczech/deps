@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './Terminal.css';
 
 interface TerminalProps {
@@ -57,14 +58,14 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onToggle 
         }
     }, [isResizing]);
 
+    const { t } = useTranslation();
+
     if (!isVisible) return null;
 
     const handleToggle = () => {
         setIsCollapsed(!isCollapsed);
         onToggle();
     };
-
-
 
     return (
         <div
@@ -83,11 +84,11 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onToggle 
                     <button
                         className="toggle-btn"
                         onClick={handleToggle}
-                        title={isCollapsed ? "Expand terminal" : "Collapse terminal"}
+                        title={isCollapsed ? t('terminal.expand') : t('terminal.collapse')}
                     >
                         {isCollapsed ? '▲' : '▼'}
                     </button>
-                    <span>COMMAND OUTPUT (npm)</span>
+                    <span>{t('terminal.title')}</span>
                 </div>
             </div>
             {!isCollapsed && (
@@ -95,7 +96,7 @@ export const Terminal: React.FC<TerminalProps> = ({ output, isVisible, onToggle 
                     {output.map((line, i) => (
                         <div key={i} className="terminal-line">{line}</div>
                     ))}
-                    {output.length === 0 && <div className="terminal-line text-muted">Žádný výstup...</div>}
+                    {output.length === 0 && <div className="terminal-line text-muted">{t('terminal.empty')}</div>}
                 </div>
             )}
         </div>

@@ -59,6 +59,7 @@
         "empty": "Vyberte balíček pro zobrazení detailů",
         "majorWarning": "⚠️ Důležitá aktualizace. Možné změny v kompatibilitě.",
         "forceUpdate": "Vynutit aktualizaci na",
+        "noRepo": "Žádné informace o repozitáři",
         "links": {
             "github": "GitHub",
             "homepage": "Domovská stránka",
@@ -71,5 +72,49 @@
         "confirmCheckbox": "Rozumím riziku.",
         "cancel": "Zrušit",
         "update": "Aktualizovat"
+    },
+    "audit": {
+        "title": "Bezpečnostní audit",
+        "fixing": "Opravuji zranitelnosti...",
+        "analyzing": "Analyzuji zranitelnosti...",
+        "analyzingHint": "Spouští se `npm audit`, chvíli strpení.",
+        "fixingMessage": "Spouštím `npm audit fix`...",
+        "fixingHint": "Sledujte detaily v terminálu.",
+        "found": "Nalezeny zranitelnosti",
+        "none": "Nebyly nalezeny žádné zranitelnosti!",
+        "affected": "Dotčené balíčky",
+        "adviceSafe": "Vaše závislosti vypadají bezpečně.",
+        "adviceFix": "Spusťte `npm audit fix` pro automatickou opravu.",
+        "failed": "Nepodařilo se načíst výsledky auditu.",
+        "runFix": "Spustit `npm audit fix`",
+        "close": "Zavřít",
+        "critical": "Kritická",
+        "high": "Vysoká",
+        "moderate": "Střední",
+        "low": "Nízká",
+        "info": "Info",
+        "directDep": "Přímá závislost",
+        "transitiveDep": "Nepřímá závislost",
+        "clickToView": "Klikněte pro detail balíčku",
+        "empty": "Detaily nejsou v souhrnu dostupné"
+    },
+    "terminal": {
+        "title": "VÝSTUP PŘÍKAZŮ (npm)",
+        "expand": "Rozbalit terminál",
+        "collapse": "Sbalit terminál",
+        "empty": "Žádný výstup...",
+        "startingUpdate": "Zahajuji aktualizaci",
+        "startingRollback": "Zahajuji vrácení verze",
+        "updateSuccess": "Aktualizace úspěšně dokončena.",
+        "rollbackSuccess": "Vrácení verze úspěšně dokončeno.",
+        "error": "Chyba"
+    },
+    "toast": {
+        "updating": "Aktualizuji {{name}} na {{version}}...",
+        "rollingBack": "Vracím {{name}} na verzi {{version}}...",
+        "updateCompleted": "Aktualizace dokončena",
+        "rollbackCompleted": "Vrácení verze dokončeno",
+        "failed": "Operace selhala"
     }
+
 }

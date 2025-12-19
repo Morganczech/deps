@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './AuditModal.css';
 
 interface AuditResult {
@@ -32,6 +33,8 @@ interface AuditModalProps {
 export const AuditModal: React.FC<AuditModalProps> = ({
     isOpen, result, isLoading, onClose, onFix, isFixing, directDependencies, onSelectPackage
 }) => {
+    const { t } = useTranslation();
+
     if (!isOpen) return null;
 
     // ... (rest of component render)
@@ -41,7 +44,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({
             <div className="audit-modal-content" onClick={e => e.stopPropagation()}>
                 {/* ... header ... */}
                 <div className="modal-header">
-                    <h3>{isFixing ? "Fixing Vulnerabilities..." : "Security Audit"}</h3>
+                    <h3>{isFixing ? t('audit.fixing') : t('audit.title')}</h3>
                     {!isFixing && <button className="close-btn" onClick={onClose}>×</button>}
                 </div>
 
@@ -50,17 +53,17 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                     {isLoading ? (
                         <div className="audit-loading">
                             <div className="spinner"></div>
-                            <p>Analyzing vulnerabilities...</p>
-                            <span className="hint">This runs `npm audit` and may take a moment.</span>
+                            <p>{t('audit.analyzing')}</p>
+                            <span className="hint">{t('audit.analyzingHint')}</span>
                             <button className="btn-secondary btn-cancel" onClick={onClose}>
-                                Cancel
+                                {t('audit.close')}
                             </button>
                         </div>
                     ) : isFixing ? (
                         <div className="audit-loading">
                             <div className="spinner"></div>
-                            <p>Running `npm audit fix`...</p>
-                            <span className="hint">Check the terminal for details.</span>
+                            <p>{t('audit.fixingMessage')}</p>
+                            <span className="hint">{t('audit.fixingHint')}</span>
                         </div>
                     ) : result ? (
                         <div className="audit-results">
@@ -69,7 +72,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                                 <div className={`security-shield ${result.counts.total === 0 ? 'secure' : 'vulnerable'}`}>
                                     {result.counts.total === 0 ? '🛡️' : '⚠️'}
                                 </div>
-                                <h4>{result.counts.total === 0 ? "No vulnerabilities found!" : "Vulnerabilities Detected"}</h4>
+                                <h4>{result.counts.total === 0 ? t('audit.none') : t('audit.found')}</h4>
                             </div>
 
                             {result.counts.total > 0 && (
@@ -77,24 +80,24 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                                     <div className="vulnerability-grid">
                                         <div className="vuln-item critical">
                                             <span className="count">{result.counts.critical}</span>
-                                            <span className="label">Critical</span>
+                                            <span className="label">{t('audit.critical')}</span>
                                         </div>
                                         <div className="vuln-item high">
                                             <span className="count">{result.counts.high}</span>
-                                            <span className="label">High</span>
+                                            <span className="label">{t('audit.high')}</span>
                                         </div>
                                         <div className="vuln-item moderate">
                                             <span className="count">{result.counts.moderate}</span>
-                                            <span className="label">Moderate</span>
+                                            <span className="label">{t('audit.moderate')}</span>
                                         </div>
                                         <div className="vuln-item low">
                                             <span className="count">{result.counts.low}</span>
-                                            <span className="label">Low</span>
+                                            <span className="label">{t('audit.low')}</span>
                                         </div>
                                     </div>
 
                                     <div className="affected-packages">
-                                        <h5>Affected Packages ({result.vulnerable_packages.length})</h5>
+                                        <h5>{t('audit.affected')} ({result.vulnerable_packages.length})</h5>
                                         <ul className="vuln-list">
                                             {result.vulnerable_packages.map((pkg, idx) => {
                                                 const isDirect = directDependencies?.has(pkg.name);
@@ -105,9 +108,9 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                                                         key={idx}
                                                         className={`vuln-row ${pkg.severity} ${isClickable ? 'clickable' : ''}`}
                                                         onClick={() => isClickable && onSelectPackage && onSelectPackage(pkg.name)}
-                                                        title={isDirect ? "Click to view package details" : "Transitive dependency"}
+                                                        title={isDirect ? t('audit.clickToView') : t('audit.transitiveDep')}
                                                     >
-                                                        <span className="pkg-type" title={isDirect ? "Direct Dependency" : "Transitive Dependency"}>
+                                                        <span className="pkg-type" title={isDirect ? t('audit.directDep') : t('audit.transitiveDep')}>
                                                             {isDirect ? '📦' : '🔗'}
                                                         </span>
                                                         <span className="pkg-name">{pkg.name}</span>
@@ -117,7 +120,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                                                 );
                                             })}
                                             {result.vulnerable_packages.length === 0 && (
-                                                <li className="vuln-row empty">Details not available in summary</li>
+                                                <li className="vuln-row empty">{t('audit.empty')}</li>
                                             )}
                                         </ul>
                                     </div>
@@ -127,14 +130,14 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                             <div className="audit-advice">
                                 <p>
                                     {result.counts.total === 0
-                                        ? "Your dependencies look safe and sound."
-                                        : "Run `npm audit fix` to address these issues automatically."}
+                                        ? t('audit.adviceSafe')
+                                        : t('audit.adviceFix')}
                                 </p>
                             </div>
                         </div>
                     ) : (
                         <div className="error-state">
-                            <p>Failed to load audit results.</p>
+                            <p>{t('audit.failed')}</p>
                         </div>
                     )}
                 </div>
@@ -144,10 +147,10 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                     <div className="modal-actions">
                         {result && result.counts.total > 0 && onFix && (
                             <button className="btn-primary" onClick={onFix}>
-                                Run `npm audit fix`
+                                {t('audit.runFix')}
                             </button>
                         )}
-                        <button className="btn-secondary" onClick={onClose}>Close</button>
+                        <button className="btn-secondary" onClick={onClose}>{t('audit.close')}</button>
                     </div>
                 )}
             </div>

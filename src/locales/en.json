@@ -59,6 +59,7 @@
         "empty": "Select a package to view details",
         "majorWarning": "⚠️ Major update available. Potential breaking changes.",
         "forceUpdate": "Force update to",
+        "noRepo": "No repository info",
         "links": {
             "github": "GitHub",
             "homepage": "Homepage",
@@ -71,5 +72,49 @@
         "confirmCheckbox": "I understand the risk.",
         "cancel": "Cancel",
         "update": "Update"
+    },
+    "audit": {
+        "title": "Security Audit",
+        "fixing": "Fixing Vulnerabilities...",
+        "analyzing": "Analyzing vulnerabilities...",
+        "analyzingHint": "This runs `npm audit` and may take a moment.",
+        "fixingMessage": "Running `npm audit fix`...",
+        "fixingHint": "Check the terminal for details.",
+        "found": "Vulnerabilities Detected",
+        "none": "No vulnerabilities found!",
+        "affected": "Affected Packages",
+        "adviceSafe": "Your dependencies look safe and sound.",
+        "adviceFix": "Run `npm audit fix` to address these issues automatically.",
+        "failed": "Failed to load audit results.",
+        "runFix": "Run `npm audit fix`",
+        "close": "Close",
+        "critical": "Critical",
+        "high": "High",
+        "moderate": "Moderate",
+        "low": "Low",
+        "info": "Info",
+        "directDep": "Direct Dependency",
+        "transitiveDep": "Transitive Dependency",
+        "clickToView": "Click to view package details",
+        "empty": "Details not available in summary"
+    },
+    "terminal": {
+        "title": "COMMAND OUTPUT (npm)",
+        "expand": "Expand terminal",
+        "collapse": "Collapse terminal",
+        "empty": "No output...",
+        "startingUpdate": "Starting update",
+        "startingRollback": "Starting rollback",
+        "updateSuccess": "Update completed successfully.",
+        "rollbackSuccess": "Rollback completed successfully.",
+        "error": "Error"
+    },
+    "toast": {
+        "updating": "Updating {{name}} to {{version}}...",
+        "rollingBack": "Rolling back {{name}} to {{version}}...",
+        "updateCompleted": "Update completed",
+        "rollbackCompleted": "Rollback completed",
+        "failed": "Operation failed"
     }
+
 }

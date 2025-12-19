@@ -126,7 +126,7 @@ export const PackageDetails: React.FC<PackageDetailsProps> = ({
                             {t('details.links.github')}
                         </button>
                     ) : (
-                        <span className="no-info">No repository info</span>
+                        <span className="no-info">{t('details.noRepo')}</span>
                     )}
 
                     {pkg.homepage && pkg.homepage !== pkg.repository && (
