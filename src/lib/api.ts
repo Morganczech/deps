@@ -1,6 +1,4 @@
-import { invoke } from "@tauri-apps/api/tauri";
-import { open } from "@tauri-apps/api/dialog";
-import { open as openShell } from "@tauri-apps/api/shell";
+import { invoke } from "@tauri-apps/api/core";
 import { Project, Package } from "../types";
 
 const isTauri = () => {
@@ -53,24 +51,10 @@ const MOCK_PACKAGES: Package[] = [
 
 export const api = {
     selectFolder: async (): Promise<string | null> => {
-        if (isTauri()) {
-            try {
-                const selected = await open({
-                    directory: true,
-                    multiple: false,
-                    recursive: false,
-                });
-                if (selected === null) return null;
-                return typeof selected === 'string' ? selected : selected[0];
-            } catch (e) {
-                console.error("Tauri dialog failed", e);
-                return null;
-            }
-        } else {
-            // Web fallback
-            console.warn("Running in Web Mode: returning mock folder path");
-            return "/home/user/demo";
-        }
+        // TODO: Install @tauri-apps/plugin-dialog for native folder selection
+        // For now, using web fallback in both modes
+        console.warn("Using web fallback for folder selection (dialog plugin not installed)");
+        return "/home/user/demo";
     },
 
     scanProjects: async (rootPath: string): Promise<Project[]> => {
@@ -106,14 +90,8 @@ export const api = {
     },
 
     openUrl: async (url: string): Promise<void> => {
-        if (isTauri()) {
-            try {
-                await openShell(url);
-            } catch (e) {
-                console.error("Failed to open URL via Tauri shell", e);
-            }
-        } else {
-            window.open(url, '_blank');
-        }
+        // TODO: Install @tauri-apps/plugin-shell for native URL opening
+        // For now, using web fallback in both modes
+        window.open(url, '_blank');
     }
 };

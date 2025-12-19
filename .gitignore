@@ -115,3 +115,7 @@ dist
 
 # Tauri build artifacts
 src-tauri/target/
+
+# Flatpak build artifacts
+build-dir/
+.flatpak-builder/
