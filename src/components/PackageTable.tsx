@@ -28,11 +28,11 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
             <table className="package-table">
                 <thead>
                     <tr>
-                        <th>{t('table.package')}</th>
-                        <th>{t('table.current')}</th>
-                        <th>{t('table.wanted')}</th>
-                        <th>{t('table.latest')}</th>
-                        <th>
+                        <th className="header-name">{t('table.package')}</th>
+                        <th className="header-ver">{t('table.current')}</th>
+                        <th className="header-ver">{t('table.wanted')}</th>
+                        <th className="header-ver">{t('table.latest')}</th>
+                        <th className="header-status">
                             {t('table.status')}
                             <StatusHelp />
                         </th>
@@ -49,7 +49,7 @@ export const PackageTable: React.FC<PackageTableProps> = ({ packages, selectedPa
                             `}
                             onClick={() => onSelect(pkg)}
                         >
-                            <td className="col-name">{pkg.name}</td>
+                            <td className="col-name" title={pkg.name}>{pkg.name}</td>
                             <td className="col-ver">{pkg.current_version}</td>
                             <td className="col-ver">{pkg.wanted_version}</td>
                             <td className="col-ver">{pkg.latest_version}</td>

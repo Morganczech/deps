@@ -54,6 +54,11 @@
 
 .col-name {
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* max-width is needed for ellipsis in td */
+    max-width: 0; 
 }
 
 .col-ver {
@@ -62,6 +67,23 @@
 }
 .selected .col-ver {
     color: #ddd;
+}
+
+.col-status {
+    text-align: center;
+}
+
+/* Header Widths - Controls Fixed Layout */
+.header-name {
+    width: 30%; /* Narrower package column */
+}
+
+.header-ver {
+    width: 12%; /* Narrower versions */
+}
+
+.header-status {
+    width: 34%; /* Much wider status column */
 }
 
 .badge {

@@ -679,14 +679,22 @@ function App() {
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             autoFocus
                                         />
-                                        <select
-                                            className="search-scope-select"
-                                            value={searchScope}
-                                            onChange={(e) => setSearchScope(e.target.value as 'current' | 'all')}
-                                        >
-                                            <option value="current">{t('app.searchScope.current')}</option>
-                                            <option value="all">{t('app.searchScope.all')}</option>
-                                        </select>
+                                        <div className="scope-switch">
+                                            <button
+                                                className={`scope-btn ${searchScope === 'current' ? 'active' : ''}`}
+                                                onClick={() => setSearchScope('current')}
+                                                title={t('app.searchScope.switchCurrent')}
+                                            >
+                                                {t('app.searchScope.current')}
+                                            </button>
+                                            <button
+                                                className={`scope-btn ${searchScope === 'all' ? 'active' : ''}`}
+                                                onClick={() => setSearchScope('all')}
+                                                title={t('app.searchScope.switchAll')}
+                                            >
+                                                {t('app.searchScope.all')}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 {searchScope === 'all' ? (
